@@ -42,6 +42,7 @@ function Home(){
 
     // Estado para filtrar entre filmes, animes e séries
     const [filter, setFilter] = useState("all")
+    const [search, setSearch] = useState("")
 
     // Junta todos os dados em um único array, com um campo "type" para diferenciar
     const allMedia = [
@@ -50,12 +51,25 @@ function Home(){
         ...mockSeries.map((s) => ({ ...s, type: "serie" })),
     ]
 
-    const filteredData =
-    filter === "all" ? allMedia : allMedia.filter((m) => m.type === filter)
+    // Combina filtro de categoria e pesquisa
+    const filteredData = allMedia
+        .filter((m) => filter === "all" || m.type === filter)
+        .filter((m) => m.title.toLowerCase().includes(search.toLowerCase()));
 
+    
 
     return(
         <div className="p-6">
+            {/* --- CAMPO DE PESQUISA --- */}
+            <div className="mb-6">
+                <input
+                    type="text"
+                    placeholder="🔎 Pesquisar por título..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                     className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />   
+            </div>
             {/* --- BOTÕES DE FILTRO --- */}
             <div className="flex space-x-4 mb-6">
                 <button 
