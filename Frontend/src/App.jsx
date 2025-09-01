@@ -5,6 +5,7 @@ import PrivateLayout from "./layout/PrivateLayout"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
+import MediaDetails from "./pages/MediaDetails"
 
 function App() {
   return (
@@ -34,6 +35,14 @@ function App() {
           element={
             <PrivateLayout>
               <Home />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/media/:id"
+          element={
+            <PrivateLayout>
+              <MediaDetails/>
             </PrivateLayout>
           }
         />

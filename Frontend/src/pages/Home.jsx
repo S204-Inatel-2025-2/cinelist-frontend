@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 const mockMovies = [
   {
@@ -43,6 +44,7 @@ function Home(){
     // Estado para filtrar entre filmes, animes e séries
     const [filter, setFilter] = useState("all")
     const [search, setSearch] = useState("")
+    const navigate = useNavigate()
 
     // Junta todos os dados em um único array, com um campo "type" para diferenciar
     const allMedia = [
@@ -110,12 +112,11 @@ function Home(){
             </div>
 
             {/* --- LISTA DE CARDS --- */}
-            <div 
-                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredData.map((media) =>(
                     <div 
                         key={media.id}
+                        onClick={() => navigate(`/media/${media.id}`)} 
                         className="bg-white rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform"
                     >
                         <div className="p-4">
@@ -157,7 +158,7 @@ function Home(){
                                 <button className="px-3 py-1 bg-indigo-500 text-white text-sm rounded-lg">
                                     Adicionar à Lista
                                 </button>
-                            </div>
+                            </div>      
                         </div>
                     </div>
                 ))}
