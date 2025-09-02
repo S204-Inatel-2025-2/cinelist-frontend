@@ -6,6 +6,7 @@ import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import MediaDetails from "./pages/MediaDetails"
+import Profile from "./pages/Profile"
 
 function App() {
   return (
@@ -43,6 +44,14 @@ function App() {
           element={
             <PrivateLayout>
               <MediaDetails/>
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateLayout>
+              <Profile/>
             </PrivateLayout>
           }
         />

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useUser } from "../context/UserContext";
 
 const mockMovies = [
   {
@@ -46,6 +47,7 @@ function Home(){
     const [search, setSearch] = useState("")
     const navigate = useNavigate()
 
+    const { addToUserList } = useUser();
     // Junta todos os dados em um único array, com um campo "type" para diferenciar
     const allMedia = [
         ...mockMovies.map((m) => ({ ...m, type: "filme" })),
@@ -115,9 +117,8 @@ function Home(){
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredData.map((media) =>(
                     <div 
-                        key={media.id}
-                        onClick={() => navigate(`/media/${media.id}`)} 
-                        className="bg-white rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-transform"
+                        key={media.id}  
+                        className="bg-white rounded-lg shadow-lg overflow-hidden transition-transform"
                     >
                         <div className="p-4">
                             {/* Título */}
@@ -152,10 +153,15 @@ function Home(){
 
                             {/* Botões de ação */}
                             <div  className="mt-3 flex space-x-2">
-                                <button  className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg">
+                                <button  
+                                    onClick={() => navigate(`/media/${media.id}`)}
+                                    className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:scale-105">
                                     Avaliar 
                                 </button>
-                                <button className="px-3 py-1 bg-indigo-500 text-white text-sm rounded-lg">
+                                <button 
+                                    onClick={() => addToUserList(media)}
+                                    className="px-3 py-1 bg-indigo-500 text-white text-sm rounded-lg hover:scale-105"
+                                >
                                     Adicionar à Lista
                                 </button>
                             </div>      

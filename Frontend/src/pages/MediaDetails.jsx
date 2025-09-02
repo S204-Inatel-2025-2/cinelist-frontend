@@ -40,13 +40,22 @@ const mockSeries = [
   },
 ]
 
-// --- Comentários mockados iniciais ---
-const mockComments = {
-  1: ["Filme incrível!", "Melhor trilogia já feita."],
-  2: ["Obra-prima dos animes.", "Ansioso pelo final 🔥"],
-  3: ["Breaking Bad é perfeito!", "Walter White é lendário."],
-}
 
+// --- Comentários iniciais com nome de usuário ---
+const mockComments = {
+  1: [
+    { user: "João", text: "Filme incrível!", rating: 9.7},
+    { user: "Maria", text: "Melhor trilogia já feita.", rating:8.9 },
+  ],
+  2: [
+    { user: "Carlos", text: "Obra-prima dos animes.", rating: 10 },
+    { user: "Ana", text: "Ansioso pelo final 🔥", rating: 9.8 },
+  ],
+  3: [
+    { user: "Lucas", text: "Breaking Bad é perfeito!", rating: 10 },
+    { user: "Fernanda", text: "Say my name.", rating: 9.8 },
+  ],
+}
 
 function MediaDetails(){
     const {id} = useParams()
@@ -60,9 +69,9 @@ function MediaDetails(){
 
     const media = allMedia.find((m) => m.id === parseInt(id))
     const [comments, setComments] = useState(mockComments[id] || [])
-    // estado local para o texto do novo comentário que o usuário digita
+    // inputs do formulário
+    const [username, setUsername] = useState("")
     const [newComment, setNewComment] = useState("")
-    const [rating, setRating] = useState(null) // nota que o usuário deu
     const [userRating, setUserRating] = useState("")
 
     if(!media){
@@ -78,22 +87,26 @@ function MediaDetails(){
         )
     }
 
-    const handleAddComment = () => {
-        //não adiciona comentarios vazios, coloca espaço no lugar
-        if (newComment.trim() === "") return
-        // atualiza o estado de comments adicionando o novo comentário ao final do array (apenas no front)
-        setComments([...comments, newComment.trim()])
+    const handleAddEvaluation = () => {
+        if(username.trim() === "" || userRating === "")
+            return alert("Informe seu nome e uma nota")
+        if(userRating < 0 || userRating > 10)
+            return alert("Coloque uma nota de 0-10")
 
-        // limpa o campo de texto depois de adicionar
+        // novo objeto de avaliação
+        const newEntry = {
+        user: username.trim(),
+        text: newComment.trim() || null, // comentário é opcional
+        rating: parseFloat(userRating)
+        }
+
+        setComments([...comments, newEntry])
+
+        // limpa os inputs
         setNewComment("")
-    }
-
-     const handleSaveRating = () => {
-        if (userRating < 0 || userRating > 10) return alert("A nota deve ser entre 0 e 10")
-        setRating(userRating)
+        setUsername("")
         setUserRating("")
     }
-
 
     return(
         <div className="p-6 max-w-3xl mx-auto">
@@ -132,47 +145,37 @@ function MediaDetails(){
             {/* --- seção de avaliação --- */}
             <div className="mt-6">
                 <h2 className="text-xl font-semibold mb-2">Faça sua avaliação</h2>
-                {rating != null && (
-                    <p className="mb-2 text-green-600 font-medium">
-                        Você avaliou com a nota: {rating}/10 
-                    </p>
-                )}
-
-                <div className="flex items-center space-x-2">
-                    <input
-                        type="number"
-                        min="0"
-                        max="10"
-                        value={userRating}
-                        onChange={(e) => setUserRating(e.target.value)}
-                        placeholder="0-10"
-                        className="p-2 border rounded w-20"
-                    />
-                    <button 
-                        onClick={handleSaveRating}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg"
-                    >
-                        Salvar Nota
-                    </button>
-                </div>
-            </div>
-
-            {/* campo para adicionar novo comentário */}
-            <div className="mt-4">
+                <input 
+                    type="text"
+                    placeholder="Seu nome"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full p-2 border rounded-lg mb-2"
+                />
                 <textarea
+                    placeholder = "Escreva um comentário (opcional)"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Escreva seu comentário..."
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 border rounded-lg mb-2"
                 />
-                {/* botão que chama handleAddComment */}
-                <button
-                    onClick={handleAddComment}
-                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
+                <input 
+                    type="number"
+                    placeholder="Nota (0 a 10)"
+                    onChange={(e) => setUserRating(e.target.value)}
+                    className="w-full p-2 border rounded-lg mb-2"
+                    min="0"
+                    max="10"               
+                />
+                <button 
+                    onClick={handleAddEvaluation}
+                    className="px-4 py-2 bg-yellow-500 text-white rounded-lg"
                 >
-                    Adicionar comentário
+                    Salvar avaliação
                 </button>
+
             </div>
+
+            
 
             {/* --- seção de comentários --- */}
             <div className="mt-6">
@@ -186,9 +189,13 @@ function MediaDetails(){
                         /* lista de comentários existentes */
                         <ul className="space-y-2">
                             {comments.map((c,i) => (
-                            <li key={i} className="p-2 bg-gray-100 rounded">
-                                {c}
-                            </li>
+                                <li key={i} className="p-2 bg-gray-100 rounded">
+                                    {/* sempre mostra o nome do usuário */}
+                                    <p className="font-bold text-blue-600">{c.user}</p>
+                                    {/* comentário só aparece se existir */}
+                                    {c.text && <p>{c.text}</p>}
+                                    <p className="text-sm text-yellow-600">⭐ Nota: {c.rating}/10</p>
+                                </li>
                             ))}
                         </ul>
                 )}
