@@ -6,7 +6,6 @@ function Navbar() {
       <Link to="/" className="font-bold text-xl">CineList</Link>
       <div className="space-x-4">
         <Link to="/home">Mídia</Link>
-        <Link to="/list">Sua lista</Link>
         <Link to="/profile">Perfil</Link>
         
         

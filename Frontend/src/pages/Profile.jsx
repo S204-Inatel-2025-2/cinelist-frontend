@@ -1,25 +1,48 @@
-import { useUser } from "../context/UserContext";
+import { useContext } from "react";
+import { UserContext } from "../context/UserContext";
+import { useUser } from "../context/UserContext"
 
 function Profile(){
-    const { userList } = useUser();
+    
+    const { user, removeFromList } = useUser()
 
     return(
-        <div>
-            <h1 className="text-2xl font-bold mb-4">Perfil do Usuário</h1>
-            <h2 className="text-xl mb-2">Sua lista</h2>
-
-            {userList.length === 0 ? (
-                 <p className="text-gray-500">Você ainda não adicionou nenhuma mídia.</p>                 
-            ): (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {userList.map((media) => (
-                        <div key={media.id} className="bg-white shadow rounded-lg p-4">
-                            <h2 className="font-bold">{media.title}</h2>
-                            <p className="text-gray-600">Categoria: {media.type}</p>
-                        </div>
+        <div className="p-6 max-w-3xl mx-auto">
+            <div className="flex items-center gap-4 mb-6">
+                <img
+                    src={user.avatar}
+                    alt="Foto do usuário"
+                    className="w-20 h-20 rounded-full border"
+                />
+                <h1 className="text-2xl font-bold">{user.name}</h1>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Sua Lista</h2>
+            {user.lista.length === 0 ? (
+                <p className="text-gray-500">Nenhuma mídia adicionada ainda.</p>
+            ) : (
+                <ul className="grid grid-cols-2 gap-4">
+                    {user.lista.map((media) =>(
+                        <li key={media.id} className="p-4 bg-gray-100 rounded shadow">
+                            <h3 className="font-bold">{media.title}</h3>
+                            <button
+                                onClick={() => removeFromList(media.id)}
+                                className="mt-2 px-2 py-1 bg-red-500 text-white rounded"
+                            >
+                                Excluir
+                            </button>
+                        </li>
                     ))}
-                </div>
+                </ul>
             )}
+
+            <h2 className="text-xl font-semibold mt-8 mb-2">⭐ Suas Avaliações</h2>
+            {user.reviews.map((r,i) => (
+                <li key={i} className="p-3 bg-white rounded shadow">
+                    <p className="font-bold">{r.mediaTitle}</p>
+                    <p>⭐ {r.rating}/10</p>
+                    {r.text && <p className="italic">"{r.text}"</p>}
+                </li>
+            ))}
         </div>
     )
 }

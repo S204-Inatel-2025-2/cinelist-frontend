@@ -1,5 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
+import { useUser } from "../context/UserContext"
+import { useContext } from "react";
+import { UserContext } from "../context/UserContext";
 
 const mockMovies = [
   {
@@ -60,6 +63,8 @@ const mockComments = {
 function MediaDetails(){
     const {id} = useParams()
     const navigate = useNavigate()
+    const { addReview } = useUser()
+
 
     const allMedia = [
     ...mockMovies.map((m) => ({ ...m, type: "filme" })), // marca filmes com type = "filme"
@@ -69,6 +74,7 @@ function MediaDetails(){
 
     const media = allMedia.find((m) => m.id === parseInt(id))
     const [comments, setComments] = useState(mockComments[id] || [])
+    
     // inputs do formulário
     const [username, setUsername] = useState("")
     const [newComment, setNewComment] = useState("")
@@ -95,12 +101,14 @@ function MediaDetails(){
 
         // novo objeto de avaliação
         const newEntry = {
-        user: username.trim(),
-        text: newComment.trim() || null, // comentário é opcional
-        rating: parseFloat(userRating)
+            user: username.trim(),
+            text: newComment.trim() || null, // comentário é opcional
+            rating: parseFloat(userRating),
+            mediaTitle: media.title,
         }
 
         setComments([...comments, newEntry])
+        addReview(newEntry);
 
         // limpa os inputs
         setNewComment("")

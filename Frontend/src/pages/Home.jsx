@@ -46,7 +46,9 @@ function Home(){
     const [filter, setFilter] = useState("all")
     const [search, setSearch] = useState("")
     const navigate = useNavigate()
+    const { addToList } = useUser();
 
+    // Obtém a função de adicionar à lista a partir do contexto do usuário
     const { addToUserList } = useUser();
     // Junta todos os dados em um único array, com um campo "type" para diferenciar
     const allMedia = [
@@ -159,7 +161,7 @@ function Home(){
                                     Avaliar 
                                 </button>
                                 <button 
-                                    onClick={() => addToUserList(media)}
+                                    onClick={() => addToList(media)}
                                     className="px-3 py-1 bg-indigo-500 text-white text-sm rounded-lg hover:scale-105"
                                 >
                                     Adicionar à Lista
