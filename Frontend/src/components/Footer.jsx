@@ -2,9 +2,11 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <nav className="bg-blue-500 flex justify-between">
+    <footer className="bg-blue-500 text-white text-center py-4">
       
-    </nav>
+    </footer>
+      
+
   );
 }
 
