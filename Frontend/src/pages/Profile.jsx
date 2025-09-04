@@ -1,13 +1,33 @@
 import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
 import { useUser } from "../context/UserContext"
+import { useState } from "react";
+
+import Message from "../layout/Message";
 
 function Profile(){
     
     const { user, removeFromList } = useUser()
+    const [message, setMessage] = useState(null);
+    const [messageType, setMessageType] = useState("");
 
+    const showMessage = (msg, type) => {
+        setMessage(msg);
+        setMessageType(type);
+
+        setTimeout(() => {
+        setMessage(null);
+        setMessageType('');
+        }, 1000);
+    }
+
+    const handleRemoveClick = (media) => {
+        removeFromList(media.id)
+        showMessage(`"${media.title}" foi excluído da sua lista!`, "success")
+    }
     return(
         <div className="p-6 max-w-3xl mx-auto">
+            <Message message={message} type={messageType} />
             <div className="flex items-center gap-4 mb-6">
                 <img
                     src={user.avatar}
@@ -25,7 +45,7 @@ function Profile(){
                         <li key={media.id} className="p-4 bg-gray-100 rounded shadow">
                             <h3 className="font-bold">{media.title}</h3>
                             <button
-                                onClick={() => removeFromList(media.id)}
+                                onClick={() => handleRemoveClick(media)}
                                 className="mt-2 px-2 py-1 bg-red-500 text-white rounded"
                             >
                                 Excluir

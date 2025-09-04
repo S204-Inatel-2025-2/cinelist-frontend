@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useUser } from "../context/UserContext";
+import { useUser } from "../context/UserContext"
 
+import Message from "../layout/Message"
 const mockMovies = [
   {
     id: 1,
@@ -47,6 +48,23 @@ function Home(){
     const [search, setSearch] = useState("")
     const navigate = useNavigate()
     const { addToList } = useUser();
+    const [message, setMessage] = useState(null);
+    const [messageType, setMessageType] = useState('');
+
+    const showMessage = (msg, type) => {
+        setMessage(msg);
+        setMessageType(type);
+
+        setTimeout(() => {
+        setMessage(null);
+        setMessageType('');
+        }, 1000);
+    }
+
+    const handleAddClick = (media) =>{
+        addToList(media)
+        showMessage(`"${media.title}" foi adicionado à sua lista!`, "success")
+    }
 
     // Obtém a função de adicionar à lista a partir do contexto do usuário
     const { addToUserList } = useUser();
@@ -65,9 +83,12 @@ function Home(){
     
 
     return(
+        
         <div className="p-6">
+            
             {/* --- CAMPO DE PESQUISA --- */}
             <div className="mb-6">
+                <Message message={message} type={messageType} />
                 <input
                     type="text"
                     placeholder="🔎 Pesquisar por título..."
@@ -161,7 +182,7 @@ function Home(){
                                     Avaliar 
                                 </button>
                                 <button 
-                                    onClick={() => addToList(media)}
+                                    onClick={() => handleAddClick(media)}
                                     className="px-3 py-1 bg-indigo-500 text-white text-sm rounded-lg hover:scale-105"
                                 >
                                     Adicionar à Lista

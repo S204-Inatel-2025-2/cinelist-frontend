@@ -7,7 +7,7 @@ export function UserProvider({ children }) {
   
     const [user, setUser] = useState({
         name: "Eduardo",
-        avatar: "https://www.w3schools.com/howto/img_avatar.png", // foto fake
+        avatar: "https://www.w3schools.com/howto/img_avatar.png", 
         lista: [], // mídias adicionadas
         reviews: [] // avaliações feitas
     });
