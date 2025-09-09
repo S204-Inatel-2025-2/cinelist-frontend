@@ -1,5 +1,4 @@
-
-// /src/Layouts/PrivateLayout
+// src/Layouts/PrivateLayout.jsx
 import Navbar from "../components/NavBar";
 import Footer from "../components/Footer";
 

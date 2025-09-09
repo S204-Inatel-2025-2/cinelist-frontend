@@ -1,4 +1,4 @@
-// Message.jsx
+// src/layout/Message.jsx
 import React from 'react';
 
 function Message({ message, type }) {

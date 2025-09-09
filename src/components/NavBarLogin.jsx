@@ -1,3 +1,4 @@
+// src/components/NavBarLogin.jsx
 import { Link } from "react-router-dom";
 
 function Navbar() {

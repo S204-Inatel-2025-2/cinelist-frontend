@@ -1,3 +1,4 @@
+// src/pages/Profile.jsx
 import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
 import { useUser } from "../context/UserContext"
@@ -67,4 +68,4 @@ function Profile(){
     )
 }
 
-export default Profile
+export default Profile;

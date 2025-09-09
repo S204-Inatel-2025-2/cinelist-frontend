@@ -1,3 +1,4 @@
+// src/pages/MediaDetails.jsx
 import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
 import { useUser } from "../context/UserContext"
@@ -212,4 +213,4 @@ function MediaDetails(){
     )
 }
 
-export default MediaDetails
+export default MediaDetails;

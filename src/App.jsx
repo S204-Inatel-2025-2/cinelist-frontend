@@ -1,3 +1,4 @@
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 
 import PublicLayout from "./layout/PublicLayout"
@@ -63,4 +64,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

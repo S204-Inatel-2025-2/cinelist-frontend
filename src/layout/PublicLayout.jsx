@@ -1,5 +1,4 @@
-
-// /src/Layouts/PublicLayout
+// src/Layouts/PublicLayout.jsx
 import Footer from "../components/Footer";
 import NavBarLogin from "../components/NavBarLogin";
 function PublicLayout({children}){
@@ -14,4 +13,4 @@ return (
 
 }
 
-export default PublicLayout
+export default PublicLayout;
