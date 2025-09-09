@@ -37,7 +37,7 @@ O usuário pode pesquisar, filtrar, adicionar à sua lista pessoal e registrar a
 ### Estilização
 
 * Escolha do Tailwind CSS pela rapidez no protótipo e flexibilidade.
-* Padronização de feedbacks visuais com toast notifications.
+* Padronização de feedbacks visuais com toast notifications. (futuramente)
 
 ### Organização de Pastas
 
