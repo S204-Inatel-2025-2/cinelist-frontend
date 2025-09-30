@@ -1,22 +1,54 @@
 // src/pages/Register.jsx
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../context/UserContext";
+import { useMessage } from "../hooks/useMessage";
+import Message from "../layouts/Message";
+import api from "../services/api";
 
 function Register() {
   const navigate = useNavigate();
+  const { setUser } = useUser();
+  const { message, type, showMessage } = useMessage();
 
-  const handleRegister = (e) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    // TODO: implementar lógica de cadastro real
-    console.log("Usuário cadastrado!");
-    navigate("/login");
+
+    if (name.trim() === "" || email.trim() === "" || password.trim() === "") {
+      return showMessage("Preencha todos os campos!", "error");
+    }
+
+    try {
+      const response = await api.post("/register", {
+        name,
+        email,
+        password,
+      });
+
+      setUser(response.data.user);
+      localStorage.setItem("token", response.data.token);
+
+      showMessage("Cadastro realizado com sucesso!", "success");
+      setTimeout(() => navigate("/home"), 1200);
+    } catch (error) {
+      showMessage(
+        error.response?.data?.message || "Erro ao cadastrar usuário!",
+        "error"
+      );
+    }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
+      <Message message={message} type={type} />
+
       <div className="bg-white p-6 rounded-lg shadow-md w-96">
-        {/* Nome do site */}
         <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">
-          CineList
+          🎬 CineList
         </h1>
         <p className="text-sm text-gray-500 text-center mb-6">
           Crie sua conta para começar!
@@ -28,16 +60,22 @@ function Register() {
           <input
             type="text"
             placeholder="Nome"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             className="w-full p-2 border rounded"
           />
           <input
             type="email"
             placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full p-2 border rounded"
           />
           <input
             type="password"
             placeholder="Senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full p-2 border rounded"
           />
           <button
@@ -50,7 +88,7 @@ function Register() {
 
         <p
           className="mt-4 text-sm text-center text-blue-600 cursor-pointer hover:underline"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/login")}
         >
           Já tem conta? Faça login
         </p>
