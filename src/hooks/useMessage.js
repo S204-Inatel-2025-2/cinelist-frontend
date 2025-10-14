@@ -1,19 +1,17 @@
 // src/hooks/useMessege.js
-import { useState } from "react";
+import { useState, useCallback } from 'react';
 
-export function useMessage(timeout = 1500) {
-  const [message, setMessage] = useState(null);
-  const [type, setType] = useState("");
+export const useMessage = () => {
+  const [message, setMessage] = useState('');
+  const [type, setType] = useState('success');
 
-  const showMessage = (msg, t) => {
+  const showMessage = useCallback((msg, msgType = 'success') => {
     setMessage(msg);
-    setType(t);
-
+    setType(msgType);
     setTimeout(() => {
-      setMessage(null);
-      setType("");
-    }, timeout);
-  };
+      setMessage('');
+    }, 3000);
+  }, []);
 
   return { message, type, showMessage };
-}
+};

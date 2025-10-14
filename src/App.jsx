@@ -1,29 +1,125 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { UserProvider, useUser } from './context/UserContext';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
-import PublicLayout from "./layouts/PublicLayout"
-import PrivateLayout from "./layouts/PrivateLayout"
-import Home from "./pages/Home"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import MediaDetails from "./pages/MediaDetails"
-import Profile from "./pages/Profile"
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import Movies from './pages/Movies';
+import Series from './pages/Series';
+import Anime from './pages/Anime';
+import MediaDetails from './pages/MediaDetails';
+import Lists from './pages/Lists';
+import Profile from './pages/Profile';
+
+function PrivateRoute({ children }) {
+  const { user } = useUser();
+  return user ? children : <Navigate to="/login" replace />;
+}
+
+function PublicRoute({ children }) {
+  const { user } = useUser();
+  return user ? <Navigate to="/home" replace /> : children;
+}
+
+function AppContent() {
+  const { user } = useUser();
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {user && <Navbar />}
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/home"
+            element={
+              <PrivateRoute>
+                <Home />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/movies"
+            element={
+              <PrivateRoute>
+                <Movies />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/series"
+            element={
+              <PrivateRoute>
+                <Series />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/anime"
+            element={
+              <PrivateRoute>
+                <Anime />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/media/:id"
+            element={
+              <PrivateRoute>
+                <MediaDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/lists"
+            element={
+              <PrivateRoute>
+                <Lists />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </main>
+      {user && <Footer />}
+    </div>
+  );
+}
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Rotas públicas */}
-        <Route path="/" element={<PublicLayout><Login /></PublicLayout>} />
-        <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
-
-        {/* Rotas privadas */}
-        <Route path="/home" element={<PrivateLayout><Home /></PrivateLayout>} />
-        <Route path="/media/:id" element={<PrivateLayout><MediaDetails /></PrivateLayout>} />
-        <Route path="/profile" element={<PrivateLayout><Profile /></PrivateLayout>} />
-      </Routes>
-    </Router>
-  )
+    <BrowserRouter>
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
+    </BrowserRouter>
+  );
 }
 
 export default App;
