@@ -49,6 +49,21 @@ function Anime() {
     showMessage(`"${media.title || media.name}" adicionado à lista!`, 'success');
   };
 
+  const normalizeAnimeData = (anime) => ({
+    ...anime,
+    type: 'anime',
+    title: anime.title?.romaji || anime.title?.english || 'Sem título',
+    overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
+    release_date: anime.startDate?.year
+      ? `${anime.startDate.year}-${String(anime.startDate.month || 1).padStart(2, '0')}-${String(anime.startDate.day || 1).padStart(2, '0')}`
+      : null,
+    poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
+    backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
+    vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
+    genres: anime.genres ? anime.genres.map((g) => ({ id: g, name: g })) : [],
+  });
+
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -94,7 +109,11 @@ function Anime() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {anime.map((item) => (
-                <MediaCard key={item.id} media={{ ...item, type: 'anime' }} onAddToList={handleAddToList} />
+                <MediaCard
+                  key={item.id}
+                  media={normalizeAnimeData(item)}
+                  onAddToList={handleAddToList}
+                />
               ))}
             </div>
           </>

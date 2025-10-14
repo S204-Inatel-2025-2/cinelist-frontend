@@ -17,6 +17,25 @@ function MediaDetails() {
   const [review, setReview] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const getMediaTitle = (media) => {
+    if (!media) return 'Título indisponível';
+    if (typeof media.title === 'object') {
+      return media.title.romaji || media.title.english || 'Título desconhecido';
+    }
+    return media.title || media.name || 'Título desconhecido';
+  };
+
+  // Função para tratar URLs de imagem de diferentes fontes e qualidades
+  const getImageUrl = (path, quality = 'w500') => {
+    if (!path) {
+      return null;
+    }
+    if (path.startsWith('http')) {
+      return path;
+    }
+    return `https://image.tmdb.org/t/p/${quality}${path}`;
+  };
+
   if (!media) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -57,6 +76,9 @@ function MediaDetails() {
     }
   };
 
+  const backdropUrl = getImageUrl(media.backdrop_path, 'original');
+  const posterUrl = getImageUrl(media.poster_path, 'w500');
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
@@ -69,10 +91,10 @@ function MediaDetails() {
       </button>
 
       <div className="relative h-96 bg-gradient-to-br from-slate-900 to-slate-700">
-        {media.backdrop_path && (
+        {backdropUrl && (
           <img
-            src={`https://image.tmdb.org/t/p/original${media.backdrop_path}`}
-            alt={media.title || media.name}
+            src={backdropUrl}
+            alt={getMediaTitle(media)}
             className="w-full h-full object-cover opacity-40"
           />
         )}
@@ -82,17 +104,17 @@ function MediaDetails() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex flex-col md:flex-row gap-8">
-            {media.poster_path && (
+            {posterUrl && (
               <img
-                src={`https://image.tmdb.org/t/p/w500${media.poster_path}`}
-                alt={media.title || media.name}
+                src={posterUrl}
+                alt={getMediaTitle(media)}
                 className="w-64 rounded-xl shadow-lg mx-auto md:mx-0"
               />
             )}
 
             <div className="flex-1">
               <h1 className="text-4xl font-bold text-slate-900 mb-4">
-                {media.title || media.name}
+                {getMediaTitle(media)}
               </h1>
 
               {media.tagline && (

@@ -49,7 +49,10 @@ function Home() {
     setSearching(true);
     try {
       const results = await searchMedia(query);
-      setSearchResults(results || []);
+      // Aqui também normalizamos os resultados da busca que são animes
+      const normalizedResults = results.map(item => item.type === 'anime' ? normalizeAnimeData(item) : item);
+      setSearchResults(normalizedResults || []);
+
       if (!results || results.length === 0) {
         showMessage('Nenhum resultado encontrado', 'warning');
       }
@@ -64,6 +67,23 @@ function Home() {
   const handleAddToList = (media) => {
     showMessage(`"${media.title || media.name}" adicionado à lista!`, 'success');
   };
+
+  // Função para padronizar os dados de animes
+  const normalizeAnimeData = (anime) => ({
+    ...anime,
+    type: 'anime',
+    title: anime.title?.romaji || anime.title?.english || 'Sem título',
+    overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
+    // Formata a data para YYYY-MM-DD, com fallback para mês/dia 1
+    release_date: anime.startDate?.year
+      ? `${anime.startDate.year}-${String(anime.startDate.month || 1).padStart(2, '0')}-${String(anime.startDate.day || 1).padStart(2, '0')}`
+      : null,
+    poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
+    backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
+    // Normaliza a nota para uma escala de 0 a 10
+    vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
+    genres: anime.genres ? anime.genres.map((g) => ({ id: g, name: g })) : [],
+  });
 
   if (loading) {
     return (
@@ -120,7 +140,11 @@ function Home() {
               <MediaCarousel title="Séries Populares" items={series} onAddToList={handleAddToList} />
             )}
             {anime.length > 0 && (
-              <MediaCarousel title="Animes Populares" items={anime} onAddToList={handleAddToList} />
+              <MediaCarousel
+                title="Animes Populares"
+                items={anime.map(normalizeAnimeData)}
+                onAddToList={handleAddToList}
+              />
             )}
           </>
         )}
