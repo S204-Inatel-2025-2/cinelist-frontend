@@ -1,4 +1,4 @@
-// src/components/Footer.jsx
+// src/components/LoadingSpinner.jsx
 import { Film } from 'lucide-react';
 
 function Footer() {
