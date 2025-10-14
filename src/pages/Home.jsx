@@ -1,121 +1,129 @@
 // src/pages/Home.jsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "../context/UserContext";
-import { useMessage } from "../hooks/useMessage";
-import Message from "../layouts/Message";
-
-import { mockMovies, mockAnimes, mockSeries } from "../data/mockData";
+import { useState, useEffect } from 'react';
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Message';
+import SearchBar from '../components/SearchBar';
+import MediaCarousel from '../components/MediaCarousel';
+import MediaCard from '../components/MediaCard';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { getPopularMovies } from '../services/movies';
+import { getPopularSeries } from '../services/series';
+import { getPopularAnime } from '../services/anime';
+import { searchMedia } from '../services/media';
 
 function Home() {
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const navigate = useNavigate();
-  const { addToList } = useUser();
+  const [movies, setMovies] = useState([]);
+  const [series, setSeries] = useState([]);
+  const [anime, setAnime] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
 
-  const handleAddClick = (media) => {
-    addToList(media);
-    showMessage(`"${media.title}" foi adicionado à sua lista!`, "success");
+  useEffect(() => {
+    loadAllMedia();
+  }, []);
+
+  const loadAllMedia = async () => {
+    setLoading(true);
+    try {
+      const [moviesData, seriesData, animeData] = await Promise.all([
+        getPopularMovies().catch(() => []),
+        getPopularSeries().catch(() => []),
+        getPopularAnime().catch(() => []),
+      ]);
+
+      setMovies(moviesData.slice(0, 10) || []);
+      setSeries(seriesData.slice(0, 10) || []);
+      setAnime(animeData.slice(0, 10) || []);
+    } catch (error) {
+      showMessage('Erro ao carregar conteúdo', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const allMedia = [
-    ...mockMovies.map((m) => ({ ...m, type: "filme" })),
-    ...mockAnimes.map((a) => ({ ...a, type: "anime" })),
-    ...mockSeries.map((s) => ({ ...s, type: "serie" })),
-  ];
+  const handleSearch = async (query) => {
+    if (!query.trim()) return;
 
-  const filteredData = allMedia
-    .filter((m) => filter === "all" || m.type === filter)
-    .filter((m) => m.title.toLowerCase().includes(search.toLowerCase()));
+    setSearching(true);
+    try {
+      const results = await searchMedia(query);
+      setSearchResults(results || []);
+      if (!results || results.length === 0) {
+        showMessage('Nenhum resultado encontrado', 'warning');
+      }
+    } catch (error) {
+      showMessage('Erro ao buscar', 'error');
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleAddToList = (media) => {
+    showMessage(`"${media.title || media.name}" adicionado à lista!`, 'success');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <LoadingSpinner text="Carregando conteúdo..." />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <Message message={message} type={type} />
-        <input
-          type="text"
-          placeholder="🔎 Pesquisar por título..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+    <div className="min-h-screen bg-slate-50">
+      <Message message={message} type={type} />
+
+      <div className="bg-gradient-to-r from-blue-600 to-slate-900 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">
+            Bem-vindo ao CineList
+          </h1>
+          <p className="text-xl text-center mb-8 text-blue-100">
+            Descubra filmes, séries e animes incríveis
+          </p>
+          <div className="flex justify-center">
+            <SearchBar onSearch={handleSearch} placeholder="Buscar em todas as mídias..." />
+          </div>
+        </div>
       </div>
 
-      {/* Botões de filtro */}
-      <div className="flex space-x-4 mb-6">
-        {["all", "filme", "anime", "serie"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg ${
-              filter === f ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            {f === "all"
-              ? "Todos"
-              : f === "filme"
-              ? "Filmes"
-              : f === "anime"
-              ? "Animes"
-              : "Séries"}
-          </button>
-        ))}
-      </div>
-
-      {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredData.map((media) => (
-          <div
-            key={media.id}
-            className="bg-white rounded-lg shadow-lg overflow-hidden transition-transform"
-          >
-            <div className="p-4">
-              <h3 className="font-bold text-lg">{media.title}</h3>
-
-              {media.type === "filme" && (
-                <>
-                  <p className="text-sm text-gray-600">{media.overview}</p>
-                  <p className="text-sm">🎬 Diretor: {media.director}</p>
-                  <p className="text-sm">⭐ Nota: {media.rating}</p>
-                </>
-              )}
-
-              {media.type === "anime" && (
-                <>
-                  <p className="text-sm text-gray-600">{media.description}</p>
-                  <p className="text-sm">📅 Lançamento: {media.release_date}</p>
-                  <p className="text-sm">📺 Episódios: {media.episodes}</p>
-                  <p className="text-sm">⭐ Nota: {media.score}</p>
-                </>
-              )}
-
-              {media.type === "serie" && (
-                <>
-                  <p className="text-sm text-gray-600">{media.overview}</p>
-                  <p className="text-sm">🎬 Criador: {media.creator}</p>
-                  <p className="text-sm">📺 Episódios: {media.episodes}</p>
-                  <p className="text-sm">⭐ Nota: {media.rating}</p>
-                </>
-              )}
-
-              <div className="mt-3 flex space-x-2">
-                <button
-                  onClick={() => navigate(`/media/${media.id}`)}
-                  className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:scale-105"
-                >
-                  Avaliar
-                </button>
-                <button
-                  onClick={() => handleAddClick(media)}
-                  className="px-3 py-1 bg-indigo-500 text-white text-sm rounded-lg hover:scale-105"
-                >
-                  Adicionar à Lista
-                </button>
-              </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {searching ? (
+          <LoadingSpinner text="Buscando..." />
+        ) : searchResults.length > 0 ? (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-900">Resultados da Busca</h2>
+              <button
+                onClick={() => setSearchResults([])}
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Limpar busca
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+              {searchResults.map((item) => (
+                <MediaCard key={item.id} media={item} onAddToList={handleAddToList} />
+              ))}
             </div>
           </div>
-        ))}
+        ) : (
+          <>
+            {movies.length > 0 && (
+              <MediaCarousel title="Filmes Populares" items={movies} onAddToList={handleAddToList} />
+            )}
+            {series.length > 0 && (
+              <MediaCarousel title="Séries Populares" items={series} onAddToList={handleAddToList} />
+            )}
+            {anime.length > 0 && (
+              <MediaCarousel title="Animes Populares" items={anime} onAddToList={handleAddToList} />
+            )}
+          </>
+        )}
       </div>
     </div>
   );

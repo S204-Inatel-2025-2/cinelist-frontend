@@ -1,148 +1,193 @@
 // src/pages/MediaDetails.jsx
-import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
-import { useUser } from "../context/UserContext";
-import { mockMovies, mockAnimes, mockSeries, mockComments } from "../data/mockData";
+import { useState } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { ArrowLeft, Star, Calendar, Clock } from 'lucide-react';
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Message';
+import { rateMedia } from '../services/media';
 
 function MediaDetails() {
-  const { id } = useParams();
   const navigate = useNavigate();
-  const { addReview } = useUser();
+  const location = useLocation();
+  const { id } = useParams();
+  const media = location.state?.media;
+  const { message, type, showMessage } = useMessage();
 
-  const allMedia = [
-    ...mockMovies.map((m) => ({ ...m, type: "filme" })),
-    ...mockAnimes.map((a) => ({ ...a, type: "anime" })),
-    ...mockSeries.map((s) => ({ ...s, type: "serie" })),
-  ];
-
-  const media = allMedia.find((m) => m.id === parseInt(id));
-  const [comments, setComments] = useState(mockComments[id] || []);
-
-  const [username, setUsername] = useState("");
-  const [newComment, setNewComment] = useState("");
-  const [userRating, setUserRating] = useState("");
+  const [rating, setRating] = useState('');
+  const [review, setReview] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   if (!media) {
     return (
-      <div className="p-6">
-        <h2 className="text-xl font-bold">Mídia não encontrada.</h2>
-        <button
-          onClick={() => navigate(-1)}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
-        >
-          Voltar
-        </button>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">Mídia não encontrada</h2>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Voltar
+          </button>
+        </div>
       </div>
     );
   }
 
-  const handleAddEvaluation = () => {
-    if (username.trim() === "" || userRating === "")
-      return alert("Informe seu nome e uma nota");
-    if (userRating < 0 || userRating > 10)
-      return alert("Coloque uma nota de 0-10");
+  const handleSubmitRating = async (e) => {
+    e.preventDefault();
 
-    const newEntry = {
-      user: username.trim(),
-      text: newComment.trim() || null,
-      rating: parseFloat(userRating),
-      mediaTitle: media.title,
-    };
+    if (!rating || rating < 0 || rating > 10) {
+      return showMessage('Por favor, insira uma nota entre 0 e 10', 'error');
+    }
 
-    setComments([...comments, newEntry]);
-    addReview(newEntry);
-
-    setNewComment("");
-    setUsername("");
-    setUserRating("");
+    setSubmitting(true);
+    try {
+      await rateMedia({
+        media_id: media.id,
+        rating: parseFloat(rating),
+        review: review.trim() || null,
+      });
+      showMessage('Avaliação enviada com sucesso!', 'success');
+      setRating('');
+      setReview('');
+    } catch (error) {
+      showMessage('Erro ao enviar avaliação. Tente novamente.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="min-h-screen bg-slate-50">
+      <Message message={message} type={type} />
+
       <button
         onClick={() => navigate(-1)}
-        className="mb-4 px-4 py-2 bg-gray-300 rounded-lg"
+        className="fixed top-20 left-4 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
       >
-        ← Voltar
+        <ArrowLeft className="w-6 h-6 text-slate-700" />
       </button>
 
-      <h1 className="text-3xl font-bold mb-4">{media.title}</h1>
-
-      {media.type === "filme" && (
-        <>
-          <p className="text-gray-700">{media.overview}</p>
-          <p>🎬 Diretor: {media.director}</p>
-          <p>⭐ Nota: {media.rating}</p>
-        </>
-      )}
-
-      {media.type === "anime" && (
-        <>
-          <p className="text-gray-700">{media.description}</p>
-          <p>📅 Lançamento: {media.release_date}</p>
-          <p>📺 Episódios: {media.episodes}</p>
-          <p>⭐ Nota: {media.score}</p>
-        </>
-      )}
-
-      {media.type === "serie" && (
-        <>
-          <p className="text-gray-700">{media.overview}</p>
-          <p>🎬 Criador: {media.creator}</p>
-          <p>📺 Episódios: {media.episodes}</p>
-          <p>⭐ Nota: {media.rating}</p>
-        </>
-      )}
-
-      {/* Avaliação */}
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Faça sua avaliação</h2>
-        <input
-          type="text"
-          placeholder="Seu nome"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-2 border rounded-lg mb-2"
-        />
-        <textarea
-          placeholder="Escreva um comentário (opcional)"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="w-full p-2 border rounded-lg mb-2"
-        />
-        <input
-          type="number"
-          placeholder="Nota (0 a 10)"
-          value={userRating}
-          onChange={(e) => setUserRating(e.target.value)}
-          className="w-full p-2 border rounded-lg mb-2"
-          min="0"
-          max="10"
-        />
-        <button
-          onClick={handleAddEvaluation}
-          className="px-4 py-2 bg-yellow-500 text-white rounded-lg"
-        >
-          Salvar avaliação
-        </button>
+      <div className="relative h-96 bg-gradient-to-br from-slate-900 to-slate-700">
+        {media.backdrop_path && (
+          <img
+            src={`https://image.tmdb.org/t/p/original${media.backdrop_path}`}
+            alt={media.title || media.name}
+            className="w-full h-full object-cover opacity-40"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 to-transparent" />
       </div>
 
-      {/* Comentários */}
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Comentários</h2>
-        {comments.length === 0 ? (
-          <p className="text-gray-500">Ainda não há comentários.</p>
-        ) : (
-          <ul className="space-y-2">
-            {comments.map((c, i) => (
-              <li key={i} className="p-2 bg-gray-100 rounded">
-                <p className="font-bold text-blue-600">{c.user}</p>
-                {c.text && <p>{c.text}</p>}
-                <p className="text-sm text-yellow-600">⭐ Nota: {c.rating}/10</p>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="flex flex-col md:flex-row gap-8">
+            {media.poster_path && (
+              <img
+                src={`https://image.tmdb.org/t/p/w500${media.poster_path}`}
+                alt={media.title || media.name}
+                className="w-64 rounded-xl shadow-lg mx-auto md:mx-0"
+              />
+            )}
+
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold text-slate-900 mb-4">
+                {media.title || media.name}
+              </h1>
+
+              {media.tagline && (
+                <p className="text-xl text-slate-600 italic mb-4">{media.tagline}</p>
+              )}
+
+              <div className="flex flex-wrap gap-4 mb-6">
+                {(media.vote_average || media.rating || media.score) && (
+                  <div className="flex items-center space-x-2 bg-yellow-100 px-4 py-2 rounded-lg">
+                    <Star className="w-5 h-5 text-yellow-600 fill-yellow-600" />
+                    <span className="font-bold text-yellow-900">
+                      {(media.vote_average || media.rating || media.score).toFixed(1)}
+                    </span>
+                  </div>
+                )}
+
+                {(media.release_date || media.first_air_date) && (
+                  <div className="flex items-center space-x-2 bg-blue-100 px-4 py-2 rounded-lg">
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                    <span className="text-blue-900">
+                      {new Date(media.release_date || media.first_air_date).getFullYear()}
+                    </span>
+                  </div>
+                )}
+
+                {media.runtime && (
+                  <div className="flex items-center space-x-2 bg-green-100 px-4 py-2 rounded-lg">
+                    <Clock className="w-5 h-5 text-green-600" />
+                    <span className="text-green-900">{media.runtime} min</span>
+                  </div>
+                )}
+              </div>
+
+              {media.genres && media.genres.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {media.genres.map((genre) => (
+                    <span
+                      key={genre.id}
+                      className="px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-sm"
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Sinopse</h2>
+              <p className="text-slate-700 leading-relaxed mb-8">
+                {media.overview || media.description || 'Sem descrição disponível.'}
+              </p>
+
+              <div className="bg-slate-50 p-6 rounded-xl">
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Faça sua avaliação</h2>
+                <form onSubmit={handleSubmitRating} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Nota (0 a 10)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      value={rating}
+                      onChange={(e) => setRating(e.target.value)}
+                      placeholder="8.5"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Comentário (opcional)
+                    </label>
+                    <textarea
+                      value={review}
+                      onChange={(e) => setReview(e.target.value)}
+                      placeholder="Compartilhe sua opinião..."
+                      rows="4"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Enviando...' : 'Enviar Avaliação'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
