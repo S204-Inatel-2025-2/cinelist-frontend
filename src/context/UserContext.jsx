@@ -1,45 +1,39 @@
 // src/context/UserContext.jsx
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
 
 export const UserContext = createContext();
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : {
-      name: "Eduardo",
-      avatar: "https://www.w3schools.com/howto/img_avatar.png",
-      lista: [],
-      reviews: []
-    };
+    const stored = localStorage.getItem('user');
+    return stored ? JSON.parse(stored) : null;
   });
 
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
   }, [user]);
 
-  const addToList = (media) => {
-    if (!user.lista.find((m) => m.id === media.id)) {
-      setUser((prev) => ({
-        ...prev,
-        lista: [...prev.lista, media],
-      }));
-    }
-  };
-
-  const removeFromList = (id) => {
-    setUser({ ...user, lista: user.lista.filter((m) => m.id !== id) });
-  };
-
-  const addReview = (review) => {
-    setUser({ ...user, reviews: [...user.reviews, review] });
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   return (
-    <UserContext.Provider value={{ user, addToList, removeFromList, addReview }}>
+    <UserContext.Provider value={{ user, setUser, logout }}>
       {children}
     </UserContext.Provider>
   );
 }
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error('useUser must be used within UserProvider');
+  }
+  return context;
+};
