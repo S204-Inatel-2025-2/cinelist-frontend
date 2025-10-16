@@ -6,10 +6,7 @@ import SearchBar from '../components/SearchBar';
 import MediaCarousel from '../components/MediaCarousel';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { getPopularMovies } from '../services/movies';
-import { getPopularSeries } from '../services/series';
-import { getPopularAnime } from '../services/anime';
-import { searchMedia } from '../services/media';
+import { getPopularMedia, searchMedia } from '../services/media';
 
 function Home() {
   const [movies, setMovies] = useState([]);
@@ -27,15 +24,14 @@ function Home() {
   const loadAllMedia = async () => {
     setLoading(true);
     try {
-      const [moviesData, seriesData, animeData] = await Promise.all([
-        getPopularMovies().catch(() => []),
-        getPopularSeries().catch(() => []),
-        getPopularAnime().catch(() => []),
-      ]);
+      const response = await getPopularMedia();
+      const allMedia = response.results || [];
 
-      setMovies(moviesData.slice(0, 10) || []);
-      setSeries(seriesData.slice(0, 10) || []);
-      setAnime(animeData.slice(0, 10) || []);
+      // Filtra os resultados por tipo para popular os carrosséis corretos
+      setMovies(allMedia.filter(m => m.type === 'movie').slice(0, 10));
+      setSeries(allMedia.filter(m => m.type === 'series').slice(0, 10));
+      setAnime(allMedia.filter(m => m.type === 'anime').slice(0, 10));
+
     } catch (error) {
       showMessage('Erro ao carregar conteúdo', 'error');
     } finally {
@@ -49,7 +45,6 @@ function Home() {
     setSearching(true);
     try {
       const response = await searchMedia(query);
-      
       const resultsArray = response?.results || [];
 
       const normalizedResults = resultsArray.map(item => 
@@ -79,13 +74,11 @@ function Home() {
     type: 'anime',
     title: anime.title?.romaji || anime.title?.english || 'Sem título',
     overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
-    // Formata a data para YYYY-MM-DD, com fallback para mês/dia 1
     release_date: anime.startDate?.year
       ? `${anime.startDate.year}-${String(anime.startDate.month || 1).padStart(2, '0')}-${String(anime.startDate.day || 1).padStart(2, '0')}`
       : null,
     poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
     backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
-    // Normaliza a nota para uma escala de 0 a 10
     vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
     genres: anime.genres ? anime.genres.map((g) => ({ id: g, name: g })) : [],
   });
