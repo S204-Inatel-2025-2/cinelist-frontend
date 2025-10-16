@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { User, Mail, Calendar, Star, List } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getUserRatings } from '../services/media';
-import MediaCard from '../components/MediaCard';
+import MediaRatedCard from '../components/MediaRatedCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
@@ -42,6 +42,7 @@ function Profile() {
     let overview;
     let rating;
     let poster_path;
+    let comment;
 
     if (item.type === 'movie') {
       id = item.movie_id;
@@ -55,6 +56,7 @@ function Profile() {
     overview = item.overview || item.description || 'Sem descrição disponível.';
     rating = item.rating ?? item.score ?? 0;
     poster_path = item.poster_path || item.image || null;
+    comment = item.comment || null;
 
     return {
       id,
@@ -63,6 +65,7 @@ function Profile() {
       overview,
       vote_average: rating,
       poster_path,
+      comment,
     };
   };
 
@@ -154,7 +157,7 @@ function Profile() {
           ) : ratings.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {ratings.map((item) => (
-                <MediaCard
+                <MediaRatedCard
                   key={`${item.type}-${item.id}`}
                   media={normalizeRatedData(item)}
                 />

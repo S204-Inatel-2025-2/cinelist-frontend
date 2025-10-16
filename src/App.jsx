@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext';
 import Navbar from './components/Navbar';
@@ -11,6 +10,7 @@ import Movies from './pages/Movies';
 import Series from './pages/Series';
 import Anime from './pages/Anime';
 import MediaDetails from './pages/MediaDetails';
+import MediaRatedDetails from './pages/MediaRatedDetails'; // <-- 1. Importe o componente
 import Lists from './pages/Lists';
 import Profile from './pages/Profile';
 
@@ -81,11 +81,22 @@ function AppContent() {
               </PrivateRoute>
             }
           />
+          {/* Rota para ver detalhes de uma mídia (de qualquer lugar, exceto perfil) */}
           <Route
             path="/media/:id"
             element={
               <PrivateRoute>
                 <MediaDetails />
+              </PrivateRoute>
+            }
+          />
+          {/* 2. ADICIONE A NOVA ROTA AQUI */}
+          {/* Rota para ver/editar uma AVALIAÇÃO (acessada pelo Perfil) */}
+          <Route
+            path="/rated/:type/:id"
+            element={
+              <PrivateRoute>
+                <MediaRatedDetails />
               </PrivateRoute>
             }
           />

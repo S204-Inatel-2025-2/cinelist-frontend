@@ -29,7 +29,7 @@ function Home() {
 
       // Filtra os resultados por tipo para popular os carrosséis corretos
       setMovies(allMedia.filter(m => m.type === 'movie').slice(0, 10));
-      setSeries(allMedia.filter(m => m.type === 'series').slice(0, 10));
+      setSeries(allMedia.filter(m => m.type === 'serie').slice(0, 10));
       setAnime(allMedia.filter(m => m.type === 'anime').slice(0, 10));
 
     } catch (error) {

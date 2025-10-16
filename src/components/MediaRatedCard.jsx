@@ -1,30 +1,21 @@
-// src/components/MediaCard.jsx
 import { useNavigate } from 'react-router-dom';
-import { Star, Plus } from 'lucide-react';
+import { Star } from 'lucide-react';
 
-// Função para tratar URLs de imagem de diferentes fontes
+// Função para tratar URLs de imagem
 const getImageUrl = (path) => {
-  // Se não houver caminho, retorna null para não renderizar a tag img
-  if (!path) {
-    return null;
-  }
-  // Se o caminho já for uma URL completa (vem do AniList), usa diretamente
-  if (path.startsWith('http')) {
-    return path;
-  }
-  // Senão, monta a URL do TMDB
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
   return `https://image.tmdb.org/t/p/w500${path}`;
 };
 
-function MediaCard({ media, onAddToList }) {
+function MediaRatedCard({ media }) {
   const navigate = useNavigate();
 
+  // MODIFICAÇÃO: A rota agora inclui o TIPO e o ID da mídia
   const handleClick = () => {
-    // Passa o objeto 'media' já padronizado para a página de detalhes
-    navigate(`/media/${media.id}`, { state: { media } });
+    navigate(`/rated/${media.type}/${media.id}`, { state: { media } });
   };
   
-  // Extrai o título corretamente, mesmo que seja um objeto
   const title = typeof media.title === 'object' 
     ? media.title.romaji || media.title.english || 'Sem título' 
     : media.title || media.name;
@@ -33,10 +24,7 @@ function MediaCard({ media, onAddToList }) {
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group h-full flex flex-col">
-      <div
-        className="relative h-64 bg-slate-800 cursor-pointer"
-        onClick={handleClick}
-      >
+      <div className="relative h-64 bg-slate-800 cursor-pointer" onClick={handleClick}>
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -57,44 +45,41 @@ function MediaCard({ media, onAddToList }) {
         </h3>
 
         <span className="inline-block self-start px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full mb-2">
-           {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
+          {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
         </span>
 
+        {/* Mostra a nota que o USUÁRIO deu */}
         {(media.vote_average != null) && (
           <div className="flex items-center space-x-1 mb-3">
             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
             <span className="text-sm font-medium text-slate-700">
-              {(media.vote_average).toFixed(1)}
+              Sua nota: {media.vote_average.toFixed(1)}
             </span>
           </div>
         )}
 
-        <p className="text-sm text-slate-600 line-clamp-2 mb-4 flex-grow">
-          {media.overview || 'Sem descrição disponível'}
-        </p>
+        {/* Mostra o COMENTÁRIO */}
+        {media.comment ? (
+          <blockquote className="mb-4 flex-grow border-l-4 border-slate-300 py-1 pl-3 text-sm italic text-slate-700 line-clamp-3">
+            "{media.comment}"
+          </blockquote>
+        ) : (
+          <p className="mb-4 flex-grow text-sm italic text-slate-500">
+            Nenhum comentário adicionado.
+          </p>
+        )}
 
-        <div className="flex space-x-2 mt-auto">
+        <div className="mt-auto">
           <button
             onClick={handleClick}
-            className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
           >
             Ver Detalhes
           </button>
-          {onAddToList && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToList(media);
-              }}
-              className="px-3 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          )}
         </div>
       </div>
     </div>
   );
 }
 
-export default MediaCard;
+export default MediaRatedCard;

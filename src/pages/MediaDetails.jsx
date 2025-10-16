@@ -60,11 +60,11 @@ function MediaDetails() {
     setSubmitting(true);
     try {
       const payload = {
-        media_type: media.type === 'tv' ? 'serie' : media.type, // Converte 'tv' para 'serie'
+        media_type: media.type === 'tv' ? 'serie' : media.type,
         media_id: media.id,
         rating: parseFloat(rating),
         comment: review.trim(),
-        user_id: 10,
+        user_id: 10, // Lembre-se de usar o ID do usuário logado aqui
       };
 
       await rateMedia(payload);
@@ -73,7 +73,6 @@ function MediaDetails() {
       setRating('');
       setReview('');
     } catch (error) {
-      // Tenta pegar a mensagem de erro específica do backend
       const errorMessage = error.response?.data?.detail || 'Erro ao enviar avaliação. Tente novamente.';
       showMessage(errorMessage, 'error');
       console.error("Erro ao avaliar:", error);
@@ -86,7 +85,6 @@ function MediaDetails() {
   const posterUrl = getImageUrl(media.poster_path, 'w500');
 
   return (
-    // O RESTO DO COMPONENTE PERMANECE IGUAL
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
