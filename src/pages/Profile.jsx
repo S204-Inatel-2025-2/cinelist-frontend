@@ -1,32 +1,87 @@
 // src/pages/Profile.jsx
+import { useState, useEffect } from 'react';
 import { User, Mail, Calendar, Star, List } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import { getUserRatings } from '../services/media';
+import MediaCard from '../components/MediaCard';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Message';
 
 function Profile() {
   const { user } = useUser();
+  const [ratings, setRatings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { message, type, showMessage } = useMessage();
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900">Usuário não encontrado</h2>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchRatings = async () => {
+      setLoading(true);
+      try {
+        const userId = 10;
+        console.log("Buscando avaliações para o usuário fixo:", userId);
+
+        const response = await getUserRatings(userId);
+        console.log("Resposta recebida:", response);
+
+        setRatings(response.results || []);
+      } catch (error) {
+        showMessage('Erro ao carregar avaliações.', 'error');
+        console.error("Falha ao buscar avaliações do usuário:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRatings();
+  }, []);
+
+  const normalizeRatedData = (item) => {
+    let id;
+    let title;
+    let overview;
+    let rating;
+    let poster_path;
+
+    if (item.type === 'movie') {
+      id = item.movie_id;
+    } else if (item.type === 'serie') {
+      id = item.serie_id;
+    } else if (item.type === 'anime') {
+      id = item.anime_id;
+    }
+
+    title = item.title || item.name || 'Sem título';
+    overview = item.overview || item.description || 'Sem descrição disponível.';
+    rating = item.rating ?? item.score ?? 0;
+    poster_path = item.poster_path || item.image || null;
+
+    return {
+      id,
+      type: item.type,
+      title,
+      overview,
+      vote_average: rating,
+      poster_path,
+    };
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <Message message={message} type={type} />
+
       <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center">
             <img
-              src={user.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
-              alt={user.name}
+              src={user?.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
+              alt={user?.name || 'Usuário #10'}
               className="w-32 h-32 rounded-full border-4 border-white shadow-xl mb-4"
             />
-            <h1 className="text-4xl font-bold mb-2">{user.name}</h1>
-            {user.email && (
+            <h1 className="text-4xl font-bold mb-2">
+              {user?.name || 'Usuário #10'}
+            </h1>
+            {user?.email && (
               <p className="text-slate-300 flex items-center space-x-2">
                 <Mail className="w-4 h-4" />
                 <span>{user.email}</span>
@@ -37,19 +92,20 @@ function Profile() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Métricas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <Star className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">0</h3>
+            <h3 className="text-3xl font-bold text-slate-900 mb-1">
+              {loading ? '...' : ratings.length}
+            </h3>
             <p className="text-slate-600">Avaliações</p>
           </div>
-
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <List className="w-12 h-12 text-blue-500 mx-auto mb-3" />
             <h3 className="text-3xl font-bold text-slate-900 mb-1">0</h3>
             <p className="text-slate-600">Listas</p>
           </div>
-
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <Calendar className="w-12 h-12 text-green-500 mx-auto mb-3" />
             <h3 className="text-3xl font-bold text-slate-900 mb-1">
@@ -59,6 +115,7 @@ function Profile() {
           </div>
         </div>
 
+        {/* Informações do perfil */}
         <div className="bg-white rounded-xl shadow-md p-6 mb-6">
           <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
             <User className="w-6 h-6" />
@@ -67,9 +124,11 @@ function Profile() {
           <div className="space-y-3">
             <div className="flex justify-between py-3 border-b border-slate-200">
               <span className="text-slate-600">Nome</span>
-              <span className="font-medium text-slate-900">{user.name}</span>
+              <span className="font-medium text-slate-900">
+                {user?.name || 'Usuário #10'}
+              </span>
             </div>
-            {user.email && (
+            {user?.email && (
               <div className="flex justify-between py-3 border-b border-slate-200">
                 <span className="text-slate-600">Email</span>
                 <span className="font-medium text-slate-900">{user.email}</span>
@@ -84,14 +143,30 @@ function Profile() {
           </div>
         </div>
 
+        {/* Avaliações */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
             <Star className="w-6 h-6" />
-            <span>Atividade Recente</span>
+            <span>Minhas Avaliações</span>
           </h2>
-          <div className="text-center py-8">
-            <p className="text-slate-600">Nenhuma atividade recente</p>
-          </div>
+          {loading ? (
+            <LoadingSpinner text="Carregando avaliações..." />
+          ) : ratings.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {ratings.map((item) => (
+                <MediaCard
+                  key={`${item.type}-${item.id}`}
+                  media={normalizeRatedData(item)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-slate-600">
+                Você ainda não avaliou nenhuma mídia.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -50,3 +50,13 @@ export const deleteRating = async (payload) => {
     throw error;
   }
 };
+
+export const getUserRatings = async (userId) => {
+  try {
+    const response = await api.post('/media/rate/user/get', { user_id: userId });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user ratings:', error);
+    throw error;
+  }
+};
