@@ -1,4 +1,3 @@
-// src/pages/MediaDetails.jsx
 import { useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock } from 'lucide-react';
@@ -19,13 +18,12 @@ function MediaDetails() {
 
   const getMediaTitle = (media) => {
     if (!media) return 'Título indisponível';
-    if (typeof media.title === 'object') {
+    if (typeof media.title === 'object' && media.title !== null) {
       return media.title.romaji || media.title.english || 'Título desconhecido';
     }
     return media.title || media.name || 'Título desconhecido';
   };
 
-  // Função para tratar URLs de imagem de diferentes fontes e qualidades
   const getImageUrl = (path, quality = 'w500') => {
     if (!path) {
       return null;
@@ -61,16 +59,24 @@ function MediaDetails() {
 
     setSubmitting(true);
     try {
-      await rateMedia({
+      const payload = {
+        media_type: media.type === 'tv' ? 'serie' : media.type, // Converte 'tv' para 'serie'
         media_id: media.id,
         rating: parseFloat(rating),
-        review: review.trim() || null,
-      });
+        comment: review.trim(),
+        user_id: 10,
+      };
+
+      await rateMedia(payload);
+
       showMessage('Avaliação enviada com sucesso!', 'success');
       setRating('');
       setReview('');
     } catch (error) {
-      showMessage('Erro ao enviar avaliação. Tente novamente.', 'error');
+      // Tenta pegar a mensagem de erro específica do backend
+      const errorMessage = error.response?.data?.detail || 'Erro ao enviar avaliação. Tente novamente.';
+      showMessage(errorMessage, 'error');
+      console.error("Erro ao avaliar:", error);
     } finally {
       setSubmitting(false);
     }
@@ -80,6 +86,7 @@ function MediaDetails() {
   const posterUrl = getImageUrl(media.poster_path, 'w500');
 
   return (
+    // O RESTO DO COMPONENTE PERMANECE IGUAL
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 

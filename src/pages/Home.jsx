@@ -48,12 +48,17 @@ function Home() {
 
     setSearching(true);
     try {
-      const results = await searchMedia(query);
-      // Aqui também normalizamos os resultados da busca que são animes
-      const normalizedResults = results.map(item => item.type === 'anime' ? normalizeAnimeData(item) : item);
-      setSearchResults(normalizedResults || []);
+      const response = await searchMedia(query);
+      
+      const resultsArray = response?.results || [];
 
-      if (!results || results.length === 0) {
+      const normalizedResults = resultsArray.map(item => 
+        item.type === 'anime' ? normalizeAnimeData(item) : item
+      );
+      
+      setSearchResults(normalizedResults);
+
+      if (resultsArray.length === 0) {
         showMessage('Nenhum resultado encontrado', 'warning');
       }
     } catch (error) {
