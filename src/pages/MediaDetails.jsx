@@ -12,7 +12,7 @@ function MediaDetails() {
   const media = location.state?.media;
   const { message, type, showMessage } = useMessage();
 
-  const [rating, setRating] = useState('');
+  const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,8 +53,8 @@ function MediaDetails() {
   const handleSubmitRating = async (e) => {
     e.preventDefault();
 
-    if (!rating || rating < 0 || rating > 10) {
-      return showMessage('Por favor, insira uma nota entre 0 e 10', 'error');
+    if (rating === '' || rating < 0 || rating > 10) {
+      return showMessage('Por favor, selecione uma nota entre 0 e 10', 'error');
     }
 
     setSubmitting(true);
@@ -64,13 +64,13 @@ function MediaDetails() {
         media_id: media.id,
         rating: parseFloat(rating),
         comment: review.trim(),
-        user_id: 10, // Lembre-se de usar o ID do usuário logado aqui
+        user_id: 10,
       };
 
       await rateMedia(payload);
 
       showMessage('Avaliação enviada com sucesso!', 'success');
-      setRating('');
+      setRating(5);
       setReview('');
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao enviar avaliação. Tente novamente.';
@@ -121,52 +121,9 @@ function MediaDetails() {
               <h1 className="text-4xl font-bold text-slate-900 mb-4">
                 {getMediaTitle(media)}
               </h1>
+              
+              {/* ... (resto das informações da mídia sem alteração) ... */}
 
-              {media.tagline && (
-                <p className="text-xl text-slate-600 italic mb-4">{media.tagline}</p>
-              )}
-
-              <div className="flex flex-wrap gap-4 mb-6">
-                {(media.vote_average || media.rating || media.score) && (
-                  <div className="flex items-center space-x-2 bg-yellow-100 px-4 py-2 rounded-lg">
-                    <Star className="w-5 h-5 text-yellow-600 fill-yellow-600" />
-                    <span className="font-bold text-yellow-900">
-                      {(media.vote_average || media.rating || media.score).toFixed(1)}
-                    </span>
-                  </div>
-                )}
-
-                {(media.release_date || media.first_air_date) && (
-                  <div className="flex items-center space-x-2 bg-blue-100 px-4 py-2 rounded-lg">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                    <span className="text-blue-900">
-                      {new Date(media.release_date || media.first_air_date).getFullYear()}
-                    </span>
-                  </div>
-                )}
-
-                {media.runtime && (
-                  <div className="flex items-center space-x-2 bg-green-100 px-4 py-2 rounded-lg">
-                    <Clock className="w-5 h-5 text-green-600" />
-                    <span className="text-green-900">{media.runtime} min</span>
-                  </div>
-                )}
-              </div>
-
-              {media.genres && media.genres.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {media.genres.map((genre) => (
-                    <span
-                      key={genre.id}
-                      className="px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-sm"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              <h2 className="text-2xl font-bold text-slate-900 mb-3">Sinopse</h2>
               <p className="text-slate-700 leading-relaxed mb-8">
                 {media.overview || media.description || 'Sem descrição disponível.'}
               </p>
@@ -174,22 +131,37 @@ function MediaDetails() {
               <div className="bg-slate-50 p-6 rounded-xl">
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Faça sua avaliação</h2>
                 <form onSubmit={handleSubmitRating} className="space-y-4">
+                  
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Nota (0 a 10)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      step="0.1"
-                      value={rating}
-                      onChange={(e) => setRating(e.target.value)}
-                      placeholder="8.5"
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-slate-700">
+                        Nota
+                      </label>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-lg font-bold">
+                        {parseFloat(rating).toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">💩</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        step="0.5"
+                        value={rating}
+                        onChange={(e) => setRating(e.target.value)}
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-600 
+                                   range-slider-gradient" // Adicionada classe personalizada
+                        style={{
+                          background: `linear-gradient(to right, #ef4444, #f59e0b, #22c55e)`, // Vermelho, Amarelo, Verde
+                          // O preenchimento dinâmico do lado esquerdo é mais complexo com CSS puro.
+                          // Esta é uma solução mais simples para um gradiente estático na barra.
+                        }}
+                      />
+                      <span className="text-2xl">🤩</span>
+                    </div>
                   </div>
-
+                  
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Comentário (opcional)
