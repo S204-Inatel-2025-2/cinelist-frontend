@@ -5,9 +5,10 @@ import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AddToListModal from '../components/AddToListModal'; // 1. Importar modal
 import { getPopularMovies, searchMovies } from '../services/movies';
+import { getUserLists, addItemToList } from '../services/lists'; // 2. Importar serviços de lista
 
-// Função auxiliar para remover duplicatas pelo ID (está correta)
 const removeDuplicatesById = (mediaList) => {
   if (!Array.isArray(mediaList)) return [];
   const mediaMap = new Map();
@@ -23,6 +24,13 @@ function Movies() {
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
 
+  // --- States para o Modal "Adicionar à Lista" ---
+  const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [userLists, setUserLists] = useState([]);
+  const [loadingLists, setLoadingLists] = useState(false);
+  const FIXED_USER_ID = 10;
+
   useEffect(() => {
     loadMovies();
   }, []);
@@ -31,7 +39,6 @@ function Movies() {
     setLoading(true);
     try {
       const data = await getPopularMovies();
-      // CORREÇÃO: Aplicar a função diretamente em 'data', não em 'data.results'
       const uniqueMovies = removeDuplicatesById(data || []);
       setMovies(uniqueMovies.slice(0, 40));
     } catch (error) {
@@ -49,10 +56,8 @@ function Movies() {
     setSearching(true);
     try {
       const results = await searchMovies(query);
-      // CORREÇÃO: Aplicar a função diretamente em 'results', não em 'results.results'
       const uniqueMovies = removeDuplicatesById(results || []);
       setMovies(uniqueMovies.slice(0, 40));
-
       if (uniqueMovies.length === 0) {
         showMessage('Nenhum filme encontrado', 'warning');
       }
@@ -63,9 +68,42 @@ function Movies() {
     }
   };
 
-  const handleAddToList = (media) => {
-    const title = media.title || media.name;
-    showMessage(`"${title}" adicionado à lista!`, 'success');
+  // --- Funções para controlar o modal ---
+  const handleOpenAddToListModal = async (media) => {
+    setSelectedMedia(media);
+    setIsAddToListModalOpen(true);
+    setLoadingLists(true);
+    try {
+      const lists = await getUserLists({ user_id: FIXED_USER_ID });
+      setUserLists(lists || []);
+    } catch (error) {
+      showMessage('Erro ao buscar suas listas', 'error');
+    } finally {
+      setLoadingLists(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsAddToListModalOpen(false);
+    setSelectedMedia(null);
+  };
+
+  const handleSelectList = async (listId) => {
+    if (!selectedMedia) return;
+    try {
+      const payload = {
+        lista_id: listId,
+        media_id: selectedMedia.id,
+        media_type: selectedMedia.type,
+      };
+      await addItemToList(payload);
+      showMessage(`"${selectedMedia.title || selectedMedia.name}" adicionado à lista!`, 'success');
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'Erro ao adicionar item';
+      showMessage(errorMessage, 'error');
+    } finally {
+      handleCloseModal();
+    }
   };
 
   if (loading) {
@@ -113,12 +151,20 @@ function Movies() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {movies.map((movie) => (
-                <MediaCard key={movie.id} media={{ ...movie, type: 'movie' }} onAddToList={handleAddToList} />
+                <MediaCard key={movie.id} media={{ ...movie, type: 'movie' }} onAddToList={handleOpenAddToListModal} />
               ))}
             </div>
           </>
         )}
       </div>
+
+      <AddToListModal
+        isOpen={isAddToListModalOpen}
+        onClose={handleCloseModal}
+        lists={userLists}
+        isLoading={loadingLists}
+        onSelectList={handleSelectList}
+      />
     </div>
   );
 }

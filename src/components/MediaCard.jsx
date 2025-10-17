@@ -33,6 +33,7 @@ function MediaCard({ media, onAddToList }) {
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group h-full flex flex-col">
+      {/* --- ÁREA DA IMAGEM CLICÁVEL --- */}
       <div
         className="relative h-64 bg-slate-800 cursor-pointer"
         onClick={handleClick}
@@ -51,13 +52,14 @@ function MediaCard({ media, onAddToList }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
+      {/* --- ÁREA DE CONTEÚDO --- */}
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="font-bold text-lg mb-2 line-clamp-1 text-slate-900">
           {title}
         </h3>
 
         <span className="inline-block self-start px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full mb-2">
-           {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
+          {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
         </span>
 
         {(media.vote_average != null) && (
@@ -73,6 +75,7 @@ function MediaCard({ media, onAddToList }) {
           {media.overview || 'Sem descrição disponível'}
         </p>
 
+        {/* --- BOTÕES DE AÇÃO --- */}
         <div className="flex space-x-2 mt-auto">
           <button
             onClick={handleClick}
@@ -80,13 +83,17 @@ function MediaCard({ media, onAddToList }) {
           >
             Ver Detalhes
           </button>
+
+          {/* O botão de adicionar só aparece se a função for passada via props */}
           {onAddToList && (
             <button
               onClick={(e) => {
+                // Impede que o clique no botão também ative o 'handleClick' do card
                 e.stopPropagation();
                 onAddToList(media);
               }}
               className="px-3 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+              title="Adicionar à lista"
             >
               <Plus className="w-5 h-5" />
             </button>

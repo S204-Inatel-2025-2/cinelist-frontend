@@ -1,4 +1,3 @@
-// src/pages/Series.jsx
 import { useState, useEffect } from 'react';
 import { Tv } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
@@ -6,13 +5,22 @@ import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AddToListModal from '../components/AddToListModal'; // 1. Importar modal
 import { getPopularSeries, searchSeries } from '../services/series';
+import { getUserLists, addItemToList } from '../services/lists'; // 2. Importar serviços de lista
 
 function Series() {
   const [series, setSeries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
+
+  // --- States para o Modal "Adicionar à Lista" ---
+  const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [userLists, setUserLists] = useState([]);
+  const [loadingLists, setLoadingLists] = useState(false);
+  const FIXED_USER_ID = 10;
 
   useEffect(() => {
     loadSeries();
@@ -34,7 +42,7 @@ function Series() {
     setSearching(true);
     try {
       const results = await searchSeries(query);
-      setSeries((data || []).slice(0, 40));
+      setSeries((results || []).slice(0, 40)); // CORREÇÃO: Usar 'results' em vez de 'data'
       if (!results || results.length === 0) {
         showMessage('Nenhuma série encontrada', 'warning');
       }
@@ -45,8 +53,42 @@ function Series() {
     }
   };
 
-  const handleAddToList = (media) => {
-    showMessage(`"${media.name}" adicionado à lista!`, 'success');
+  // --- Funções para controlar o modal ---
+  const handleOpenAddToListModal = async (media) => {
+    setSelectedMedia(media);
+    setIsAddToListModalOpen(true);
+    setLoadingLists(true);
+    try {
+      const lists = await getUserLists({ user_id: FIXED_USER_ID });
+      setUserLists(lists || []);
+    } catch (error) {
+      showMessage('Erro ao buscar suas listas', 'error');
+    } finally {
+      setLoadingLists(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsAddToListModalOpen(false);
+    setSelectedMedia(null);
+  };
+
+  const handleSelectList = async (listId) => {
+    if (!selectedMedia) return;
+    try {
+      const payload = {
+        lista_id: listId,
+        media_id: selectedMedia.id,
+        media_type: selectedMedia.type,
+      };
+      await addItemToList(payload);
+      showMessage(`"${selectedMedia.name}" adicionado à lista!`, 'success');
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'Erro ao adicionar item';
+      showMessage(errorMessage, 'error');
+    } finally {
+      handleCloseModal();
+    }
   };
 
   if (loading) {
@@ -61,7 +103,6 @@ function Series() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Message message={message} type={type} />
 
-      {/* Banner superior */}
       <div className="bg-gradient-to-r from-green-600 to-green-800 text-white py-12 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-8 lg:px-12">
           <div className="flex flex-col items-center justify-center text-center">
@@ -79,7 +120,6 @@ function Series() {
         </div>
       </div>
 
-      {/* Listagem */}
       <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
         {searching ? (
           <LoadingSpinner text="Buscando séries..." />
@@ -101,14 +141,22 @@ function Series() {
               {series.map((show) => (
                 <MediaCard
                   key={show.id}
-                  media={{ ...show, type: 'tv' }}
-                  onAddToList={handleAddToList}
+                  media={{ ...show, type: 'serie' }} // CORREÇÃO: 'tv' para 'serie' para corresponder ao backend
+                  onAddToList={handleOpenAddToListModal}
                 />
               ))}
             </div>
           </>
         )}
       </div>
+
+      <AddToListModal
+        isOpen={isAddToListModalOpen}
+        onClose={handleCloseModal}
+        lists={userLists}
+        isLoading={loadingLists}
+        onSelectList={handleSelectList}
+      />
     </div>
   );
 }
