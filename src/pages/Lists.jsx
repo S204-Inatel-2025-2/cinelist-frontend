@@ -1,5 +1,6 @@
 // src/pages/Lists.jsx
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { List, Plus, Trash2, Eye } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import { useUser } from '../context/UserContext';
@@ -8,24 +9,28 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { createList, getUserLists, deleteList } from '../services/lists';
 
 function Lists() {
-  const [lists, setLists] = useState([]);
+const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [newListDescription, setNewListDescription] = useState('');
   const { message, type, showMessage } = useMessage();
-  const { user } = useUser();
+  const { user } = useUser(); // Mantido para uso futuro
+  const navigate = useNavigate();
+
+  const FIXED_USER_ID = 10;
 
   useEffect(() => {
-    loadLists();
-  }, []);
+    if (user) {
+      loadLists();
+    }
+  }, [user]);
 
   const loadLists = async () => {
-    if (!user) return;
-
     setLoading(true);
     try {
-      const data = await getUserLists({ user_id: user.id || 1 });
+      // Usando o ID fixo para buscar as listas
+      const data = await getUserLists({ user_id: FIXED_USER_ID });
       setLists(data || []);
     } catch (error) {
       showMessage('Erro ao carregar listas', 'error');
@@ -41,11 +46,14 @@ function Lists() {
     }
 
     try {
-      await createList({
-        name: newListName.trim(),
+      const payload = {
+        nome: newListName.trim(),
         description: newListDescription.trim() || null,
-        user_id: user?.id || 1,
-      });
+        user_id: FIXED_USER_ID,
+      };
+      
+      await createList(payload);
+      
       showMessage('Lista criada com sucesso!', 'success');
       setNewListName('');
       setNewListDescription('');
@@ -57,15 +65,27 @@ function Lists() {
   };
 
   const handleDeleteList = async (listId) => {
+    if (!user) {
+        showMessage('Você precisa estar logado para excluir uma lista.', 'error');
+        return;
+    }
+
     if (!confirm('Tem certeza que deseja excluir esta lista?')) return;
 
     try {
-      await deleteList({ list_id: listId });
+      await deleteList({ 
+        lista_id: listId, 
+        user_id: FIXED_USER_ID, // Usando o ID fixo
+      });
       showMessage('Lista excluída com sucesso!', 'success');
       loadLists();
     } catch (error) {
       showMessage('Erro ao excluir lista', 'error');
     }
+  };
+
+  const handleViewList = (listId) => {
+    navigate(`/listas/${listId}`);
   };
 
   if (loading) {
@@ -129,7 +149,8 @@ function Lists() {
                 key={list.id}
                 className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6"
               >
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{list.name}</h3>
+                {/* CORREÇÃO: 'list.name' para 'list.nome' para corresponder ao backend */}
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{list.nome}</h3>
                 {list.description && (
                   <p className="text-slate-600 mb-4 line-clamp-2">{list.description}</p>
                 )}
@@ -138,7 +159,11 @@ function Lists() {
                     {list.item_count || 0} {list.item_count === 1 ? 'item' : 'itens'}
                   </span>
                   <div className="flex space-x-2">
-                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    {/* CORREÇÃO: Adicionado onClick para o botão de visualizar */}
+                    <button
+                      onClick={() => handleViewList(list.id)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
                       <Eye className="w-5 h-5" />
                     </button>
                     <button

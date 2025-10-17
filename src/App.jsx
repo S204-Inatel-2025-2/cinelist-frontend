@@ -13,6 +13,7 @@ import Anime from './pages/Anime';
 import MediaDetails from './pages/MediaDetails';
 import MediaRatedDetails from './pages/MediaRatedDetails'; // <-- 1. Importe o componente
 import Lists from './pages/Lists';
+import ListDetails from './pages/ListDetails';
 import Profile from './pages/Profile';
 
 function PrivateRoute({ children }) {
@@ -106,6 +107,14 @@ function AppContent() {
             element={
               <PrivateRoute>
                 <Lists />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/lists/:id"
+            element={
+              <PrivateRoute>
+                <ListDetails />
               </PrivateRoute>
             }
           />
