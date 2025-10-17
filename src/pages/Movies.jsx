@@ -1,4 +1,3 @@
-// src/pages/Movies.js
 import { useState, useEffect } from 'react';
 import { Film } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
@@ -7,6 +6,16 @@ import SearchBar from '../components/SearchBar';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { getPopularMovies, searchMovies } from '../services/movies';
+
+// Função auxiliar para remover duplicatas pelo ID (está correta)
+const removeDuplicatesById = (mediaList) => {
+  if (!Array.isArray(mediaList)) return [];
+  const mediaMap = new Map();
+  mediaList.forEach(media => {
+    mediaMap.set(media.id, media);
+  });
+  return Array.from(mediaMap.values());
+};
 
 function Movies() {
   const [movies, setMovies] = useState([]);
@@ -22,7 +31,9 @@ function Movies() {
     setLoading(true);
     try {
       const data = await getPopularMovies();
-      setMovies(data || []);
+      // CORREÇÃO: Aplicar a função diretamente em 'data', não em 'data.results'
+      const uniqueMovies = removeDuplicatesById(data || []);
+      setMovies(uniqueMovies.slice(0, 40));
     } catch (error) {
       showMessage('Erro ao carregar filmes', 'error');
     } finally {
@@ -31,11 +42,18 @@ function Movies() {
   };
 
   const handleSearch = async (query) => {
+    if (!query) {
+      loadMovies();
+      return;
+    }
     setSearching(true);
     try {
       const results = await searchMovies(query);
-      setMovies(results || []);
-      if (!results || results.length === 0) {
+      // CORREÇÃO: Aplicar a função diretamente em 'results', não em 'results.results'
+      const uniqueMovies = removeDuplicatesById(results || []);
+      setMovies(uniqueMovies.slice(0, 40));
+
+      if (uniqueMovies.length === 0) {
         showMessage('Nenhum filme encontrado', 'warning');
       }
     } catch (error) {
@@ -46,7 +64,8 @@ function Movies() {
   };
 
   const handleAddToList = (media) => {
-    showMessage(`"${media.title}" adicionado à lista!`, 'success');
+    const title = media.title || media.name;
+    showMessage(`"${title}" adicionado à lista!`, 'success');
   };
 
   if (loading) {
@@ -58,52 +77,43 @@ function Movies() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
-      {/* Banner superior */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-8 lg:px-12">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <Film className="w-10 h-10" />
-              <h1 className="text-4xl font-bold">Filmes</h1>
-            </div>
-            <p className="text-blue-100 text-lg mb-8">
-              Explore os melhores filmes da atualidade
-            </p>
-            <div className="flex justify-center w-full max-w-md">
-              <SearchBar onSearch={handleSearch} placeholder="Buscar filmes..." />
-            </div>
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <Film className="w-10 h-10" />
+            <h1 className="text-4xl font-bold">Filmes</h1>
+          </div>
+          <p className="text-center text-blue-100 mb-6">
+            Explore os melhores filmes
+          </p>
+          <div className="flex justify-center">
+            <SearchBar onSearch={handleSearch} placeholder="Buscar filmes..." />
           </div>
         </div>
       </div>
 
-      {/* Listagem */}
-      <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {searching ? (
           <LoadingSpinner text="Buscando filmes..." />
         ) : (
           <>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-slate-900">
                 {movies.length} {movies.length === 1 ? 'Filme' : 'Filmes'}
               </h2>
               <button
                 onClick={loadMovies}
-                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                Recarregar
+                Recarregar Populares
               </button>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {movies.map((movie) => (
-                <MediaCard
-                  key={movie.id}
-                  media={{ ...movie, type: 'movie' }}
-                  onAddToList={handleAddToList}
-                />
+                <MediaCard key={movie.id} media={{ ...movie, type: 'movie' }} onAddToList={handleAddToList} />
               ))}
             </div>
           </>

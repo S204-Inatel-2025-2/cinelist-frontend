@@ -22,7 +22,7 @@ function Anime() {
     setLoading(true);
     try {
       const data = await getPopularAnime();
-      setAnime(data || []);
+      setAnime((data || []).slice(0, 40));
     } catch (error) {
       showMessage('Erro ao carregar animes', 'error');
     } finally {
@@ -34,7 +34,7 @@ function Anime() {
     setSearching(true);
     try {
       const results = await searchAnime(query);
-      setAnime(results || []);
+      setAnime((data || []).slice(0, 40));
       if (!results || results.length === 0) {
         showMessage('Nenhum anime encontrado', 'warning');
       }

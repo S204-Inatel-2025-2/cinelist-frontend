@@ -22,7 +22,7 @@ function Series() {
     setLoading(true);
     try {
       const data = await getPopularSeries();
-      setSeries(data || []);
+      setSeries((data || []).slice(0, 40));
     } catch (error) {
       showMessage('Erro ao carregar séries', 'error');
     } finally {
@@ -34,7 +34,7 @@ function Series() {
     setSearching(true);
     try {
       const results = await searchSeries(query);
-      setSeries(results || []);
+      setSeries((data || []).slice(0, 40));
       if (!results || results.length === 0) {
         showMessage('Nenhuma série encontrada', 'warning');
       }
