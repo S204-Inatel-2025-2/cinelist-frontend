@@ -60,3 +60,15 @@ export const deleteList = async (payload) => {
     throw error;
   }
 };
+
+export const deleteListItem = async (payload) => {
+  try {
+    const response = await api.delete('/media/listas/item/delete', {
+      data: payload,
+    });
+    return response.data; // Retorna a mensagem de sucesso do backend
+  } catch (error) {
+    // Re-lança o erro para que o componente que chamou a função possa tratá-lo
+    throw error;
+  }
+};

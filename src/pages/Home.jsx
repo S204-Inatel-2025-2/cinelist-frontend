@@ -5,9 +5,9 @@ import SearchBar from '../components/SearchBar';
 import MediaCarousel from '../components/MediaCarousel';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import AddToListModal from '../components/AddToListModal'; // 1. Import the new modal component
+import AddToListModal from '../components/AddToListModal';
 import { getPopularMedia, searchMedia } from '../services/media';
-import { getUserLists, addItemToList } from '../services/lists'; // 2. Import list services
+import { getUserLists, addItemToList } from '../services/lists';
 
 function Home() {
   const [movies, setMovies] = useState([]);
@@ -46,11 +46,15 @@ function Home() {
   };
 
   const handleSearch = async (query) => {
-    if (!query.trim()) return;
+    if (!query.trim()) {
+      setSearchResults([]); // Limpa os resultados se a busca for vazia
+      return;
+    }
     setSearching(true);
     try {
       const response = await searchMedia(query);
       const resultsArray = response?.results || [];
+      // Normaliza os dados de anime, pois o formato da API é diferente
       const normalizedResults = resultsArray.map(item =>
         item.type === 'anime' ? normalizeAnimeData(item) : item
       );
@@ -68,7 +72,6 @@ function Home() {
 
   // --- Functions to control the "Add to List" modal ---
   
-  // 3. Opens the modal and fetches user's lists
   const handleOpenAddToListModal = async (media) => {
     setSelectedMedia(media);
     setIsAddToListModalOpen(true);
@@ -78,27 +81,26 @@ function Home() {
       setUserLists(lists || []);
     } catch (error) {
       showMessage('Erro ao buscar suas listas', 'error');
-      setUserLists([]); // Ensure lists are cleared on error
+      setUserLists([]);
     } finally {
       setLoadingLists(false);
     }
   };
 
-  // 4. Closes the modal and resets states
   const handleCloseModal = () => {
     setIsAddToListModalOpen(false);
     setSelectedMedia(null);
     setUserLists([]);
   };
 
-  // 5. Called when a list is selected inside the modal
   const handleSelectList = async (listId) => {
     if (!selectedMedia) return;
     try {
       const payload = {
         lista_id: listId,
         media_id: selectedMedia.id,
-        media_type: selectedMedia.type,
+        // Garante que 'tv' seja mapeado para 'serie' como no backend
+        media_type: selectedMedia.type === 'tv' ? 'serie' : selectedMedia.type,
       };
       await addItemToList(payload);
       showMessage(`"${selectedMedia.title || selectedMedia.name}" adicionado à lista!`, 'success');
@@ -111,16 +113,13 @@ function Home() {
   };
 
   const normalizeAnimeData = (anime) => ({
-    // ...your existing normalize function...
     ...anime,
     type: 'anime',
     title: anime.title?.romaji || anime.title?.english || 'Sem título',
     overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
-    release_date: anime.startDate?.year ? `${anime.startDate.year}-${String(anime.startDate.month || 1).padStart(2, '0')}-${String(anime.startDate.day || 1).padStart(2, '0')}`: null,
     poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
     backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
     vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
-    genres: anime.genres ? anime.genres.map((g) => ({ id: g, name: g })) : [],
   });
 
   if (loading) {
@@ -135,9 +134,16 @@ function Home() {
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
       
-      {/* --- Header Section (No changes) --- */}
+      {/* --- Header Section com a Barra de Busca --- */}
       <div className="bg-gradient-to-r from-blue-600 to-slate-900 text-white py-16">
-        {/* ... */}
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h1 className="text-4xl font-bold mb-4">Bem-vindo ao CineList</h1>
+          <p className="text-lg text-slate-300 mb-8">
+            Explore, avalie e organize filmes, séries e animes em um só lugar.
+          </p>
+          {/* 👇 BARRA DE BUSCA REINSERIDA E CONECTADA À FUNÇÃO handleSearch 👇 */}
+          <SearchBar onSearch={handleSearch} />
+        </div>
       </div>
 
       {/* --- Main Content --- */}
@@ -154,8 +160,7 @@ function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
               {searchResults.map((item) => (
-                // 6. Pass the new function to MediaCard
-                <MediaCard key={`${item.type}-${item.id}`} media={item} onAddToList={() => handleOpenAddToListModal(item)} />
+                <MediaCard key={`${item.type}-${item.id}`} media={item} onAddToList={handleOpenAddToListModal} />
               ))}
             </div>
           </div>
@@ -165,7 +170,6 @@ function Home() {
               <MediaCarousel
                 title="Filmes Populares"
                 items={movies}
-                // 6. Pass the new function to MediaCarousel
                 onAddToList={handleOpenAddToListModal}
               />
             )}
@@ -179,6 +183,7 @@ function Home() {
             {anime.length > 0 && (
               <MediaCarousel
                 title="Animes Populares"
+                // Normaliza os dados aqui para consistência
                 items={anime.map(normalizeAnimeData)}
                 onAddToList={handleOpenAddToListModal}
               />
@@ -187,7 +192,7 @@ function Home() {
         )}
       </div>
 
-      {/* 7. Render the modal at the end of the page */}
+      {/* Render the modal at the end of the page */}
       <AddToListModal
         isOpen={isAddToListModalOpen}
         onClose={handleCloseModal}

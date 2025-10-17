@@ -85,7 +85,7 @@ const [lists, setLists] = useState([]);
   };
 
   const handleViewList = (listId) => {
-    navigate(`/listas/${listId}`);
+    navigate(`/lists/${listId}`);
   };
 
   if (loading) {

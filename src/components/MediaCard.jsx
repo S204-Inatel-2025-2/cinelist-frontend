@@ -1,6 +1,6 @@
 // src/components/MediaCard.jsx
 import { useNavigate } from 'react-router-dom';
-import { Star, Plus } from 'lucide-react';
+import { Star, Plus, Trash2} from 'lucide-react';
 
 // Função para tratar URLs de imagem de diferentes fontes
 const getImageUrl = (path) => {
@@ -16,7 +16,7 @@ const getImageUrl = (path) => {
   return `https://image.tmdb.org/t/p/w500${path}`;
 };
 
-function MediaCard({ media, onAddToList }) {
+function MediaCard({ media, onAddToList , onRemoveFromList}) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -72,7 +72,7 @@ function MediaCard({ media, onAddToList }) {
         )}
 
         <p className="text-sm text-slate-600 line-clamp-2 mb-4 flex-grow">
-          {media.overview || 'Sem descrição disponível'}
+          {media.overview || media.description || 'Sem descrição disponível'}
         </p>
 
         {/* --- BOTÕES DE AÇÃO --- */}
@@ -84,11 +84,10 @@ function MediaCard({ media, onAddToList }) {
             Ver Detalhes
           </button>
 
-          {/* O botão de adicionar só aparece se a função for passada via props */}
+          {/* Botão de Adicionar (só aparece se a função onAddToList for passada) */}
           {onAddToList && (
             <button
               onClick={(e) => {
-                // Impede que o clique no botão também ative o 'handleClick' do card
                 e.stopPropagation();
                 onAddToList(media);
               }}
@@ -96,6 +95,20 @@ function MediaCard({ media, onAddToList }) {
               title="Adicionar à lista"
             >
               <Plus className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Botão de Remover (só aparece se a função onRemoveFromList for passada) */}
+          {onRemoveFromList && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveFromList(media);
+              }}
+              className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+              title="Remover da lista"
+            >
+              <Trash2 className="w-5 h-5" />
             </button>
           )}
         </div>
