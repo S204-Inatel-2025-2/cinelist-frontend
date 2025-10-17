@@ -19,15 +19,13 @@ function Profile() {
       setLoading(true);
       try {
         const userId = 10;
-        console.log("Buscando avaliações para o usuário fixo:", userId);
-
+        console.log('Buscando avaliações para o usuário fixo:', userId);
         const response = await getUserRatings(userId);
-        console.log("Resposta recebida:", response);
-
+        console.log('Resposta recebida:', response);
         setRatings(response.results || []);
       } catch (error) {
         showMessage('Erro ao carregar avaliações.', 'error');
-        console.error("Falha ao buscar avaliações do usuário:", error);
+        console.error('Falha ao buscar avaliações do usuário:', error);
       } finally {
         setLoading(false);
       }
@@ -70,22 +68,21 @@ function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Message message={message} type={type} />
 
-      <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center">
+      {/* Banner do perfil */}
+      <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-12 shadow-sm">
+        <div className="max-w-[1600px] mx-auto px-8 lg:px-12">
+          <div className="flex flex-col items-center text-center">
             <img
               src={user?.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
               alt={user?.name || 'Usuário #10'}
               className="w-32 h-32 rounded-full border-4 border-white shadow-xl mb-4"
             />
-            <h1 className="text-4xl font-bold mb-2">
-              {user?.name || 'Usuário #10'}
-            </h1>
+            <h1 className="text-4xl font-bold mb-2">{user?.name || 'Usuário #10'}</h1>
             {user?.email && (
-              <p className="text-slate-300 flex items-center space-x-2">
+              <p className="text-slate-300 flex items-center justify-center space-x-2">
                 <Mail className="w-4 h-4" />
                 <span>{user.email}</span>
               </p>
@@ -94,9 +91,10 @@ function Profile() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Conteúdo */}
+      <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
         {/* Métricas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <Star className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
             <h3 className="text-3xl font-bold text-slate-900 mb-1">
@@ -119,8 +117,8 @@ function Profile() {
         </div>
 
         {/* Informações do perfil */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
+        <div className="bg-white rounded-xl shadow-md p-8 mb-10">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center space-x-2">
             <User className="w-6 h-6" />
             <span>Informações do Perfil</span>
           </h2>
@@ -147,15 +145,15 @@ function Profile() {
         </div>
 
         {/* Avaliações */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center space-x-2">
+        <div className="bg-white rounded-xl shadow-md p-8">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center space-x-2">
             <Star className="w-6 h-6" />
             <span>Minhas Avaliações</span>
           </h2>
           {loading ? (
             <LoadingSpinner text="Carregando avaliações..." />
           ) : ratings.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
               {ratings.map((item) => (
                 <MediaRatedCard
                   key={`${item.type}-${item.id}`}
@@ -164,7 +162,7 @@ function Profile() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
+            <div className="text-center py-12">
               <p className="text-slate-600">
                 Você ainda não avaliou nenhuma mídia.
               </p>

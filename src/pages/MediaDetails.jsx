@@ -1,3 +1,4 @@
+// src/pages/MediaDetails.jsx
 import { useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock } from 'lucide-react';
@@ -106,14 +107,15 @@ function MediaDetails() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-50 to-transparent" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10 pb-16">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex flex-col md:flex-row gap-8">
             {posterUrl && (
               <img
                 src={posterUrl}
                 alt={getMediaTitle(media)}
-                className="w-64 rounded-xl shadow-lg mx-auto md:mx-0"
+                // LINHA ALTERADA AQUI
+                className="w-64 h-auto object-cover rounded-xl shadow-lg mx-auto md:mx-0"
               />
             )}
 
@@ -122,8 +124,6 @@ function MediaDetails() {
                 {getMediaTitle(media)}
               </h1>
               
-              {/* ... (resto das informações da mídia sem alteração) ... */}
-
               <p className="text-slate-700 leading-relaxed mb-8">
                 {media.overview || media.description || 'Sem descrição disponível.'}
               </p>
@@ -150,12 +150,9 @@ function MediaDetails() {
                         step="0.5"
                         value={rating}
                         onChange={(e) => setRating(e.target.value)}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-600 
-                                   range-slider-gradient" // Adicionada classe personalizada
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         style={{
-                          background: `linear-gradient(to right, #ef4444, #f59e0b, #22c55e)`, // Vermelho, Amarelo, Verde
-                          // O preenchimento dinâmico do lado esquerdo é mais complexo com CSS puro.
-                          // Esta é uma solução mais simples para um gradiente estático na barra.
+                          background: `linear-gradient(to right, #ef4444, #f59e0b, #22c55e)`,
                         }}
                       />
                       <span className="text-2xl">🤩</span>

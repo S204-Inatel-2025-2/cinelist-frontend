@@ -27,11 +27,9 @@ function Home() {
       const response = await getPopularMedia();
       const allMedia = response.results || [];
 
-      // Filtra os resultados por tipo para popular os carrosséis corretos
       setMovies(allMedia.filter(m => m.type === 'movie').slice(0, 10));
       setSeries(allMedia.filter(m => m.type === 'serie').slice(0, 10));
       setAnime(allMedia.filter(m => m.type === 'anime').slice(0, 10));
-
     } catch (error) {
       showMessage('Erro ao carregar conteúdo', 'error');
     } finally {
@@ -47,10 +45,10 @@ function Home() {
       const response = await searchMedia(query);
       const resultsArray = response?.results || [];
 
-      const normalizedResults = resultsArray.map(item => 
+      const normalizedResults = resultsArray.map(item =>
         item.type === 'anime' ? normalizeAnimeData(item) : item
       );
-      
+
       setSearchResults(normalizedResults);
 
       if (resultsArray.length === 0) {
@@ -68,12 +66,13 @@ function Home() {
     showMessage(`"${media.title || media.name}" adicionado à lista!`, 'success');
   };
 
-  // Função para padronizar os dados de animes
   const normalizeAnimeData = (anime) => ({
     ...anime,
     type: 'anime',
     title: anime.title?.romaji || anime.title?.english || 'Sem título',
-    overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
+    overview: anime.description
+      ? anime.description.replace(/<[^>]*>/g, '')
+      : 'Sem descrição disponível.',
     release_date: anime.startDate?.year
       ? `${anime.startDate.year}-${String(anime.startDate.month || 1).padStart(2, '0')}-${String(anime.startDate.day || 1).padStart(2, '0')}`
       : null,
@@ -96,7 +95,7 @@ function Home() {
       <Message message={message} type={type} />
 
       <div className="bg-gradient-to-r from-blue-600 to-slate-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">
             Bem-vindo ao CineList
           </h1>
@@ -109,7 +108,8 @@ function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Conteúdo principal */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {searching ? (
           <LoadingSpinner text="Buscando..." />
         ) : searchResults.length > 0 ? (
@@ -123,7 +123,8 @@ function Home() {
                 Limpar busca
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
               {searchResults.map((item) => (
                 <MediaCard key={item.id} media={item} onAddToList={handleAddToList} />
               ))}
@@ -132,10 +133,18 @@ function Home() {
         ) : (
           <>
             {movies.length > 0 && (
-              <MediaCarousel title="Filmes Populares" items={movies} onAddToList={handleAddToList} />
+              <MediaCarousel
+                title="Filmes Populares"
+                items={movies}
+                onAddToList={handleAddToList}
+              />
             )}
             {series.length > 0 && (
-              <MediaCarousel title="Séries Populares" items={series} onAddToList={handleAddToList} />
+              <MediaCarousel
+                title="Séries Populares"
+                items={series}
+                onAddToList={handleAddToList}
+              />
             )}
             {anime.length > 0 && (
               <MediaCarousel

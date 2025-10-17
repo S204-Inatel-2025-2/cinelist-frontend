@@ -1,3 +1,4 @@
+// src/pages/MediaRatedDetails.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
@@ -100,7 +101,6 @@ function MediaRatedDetails() {
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
-      {/* Botão de Voltar com Estilo Claro */}
       <button
         onClick={() => navigate(-1)}
         className="fixed top-20 left-4 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
@@ -108,7 +108,6 @@ function MediaRatedDetails() {
         <ArrowLeft className="w-6 h-6 text-slate-700" />
       </button>
 
-      {/* Backdrop e Header */}
       <div className="relative h-96 bg-gradient-to-br from-slate-900 to-slate-700">
         {backdropUrl && (
           <img
@@ -117,19 +116,18 @@ function MediaRatedDetails() {
             className="w-full h-full object-cover opacity-40"
           />
         )}
-        {/* Gradiente com base no fundo claro */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-50 to-transparent" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10 pb-16">
-        {/* Card Principal com fundo branco */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex flex-col md:flex-row gap-8">
             {posterUrl && (
               <img
                 src={posterUrl}
                 alt={getMediaTitle(media)}
-                className="w-64 rounded-xl shadow-lg mx-auto md:mx-0"
+                // LINHA ALTERADA AQUI
+                className="w-64 h-auto object-cover rounded-xl shadow-lg mx-auto md:mx-0"
               />
             )}
             <div className="flex-1">
@@ -140,12 +138,10 @@ function MediaRatedDetails() {
                 {media.overview || 'Sem descrição disponível.'}
               </p>
 
-              {/* Formulário com fundo slate-50 */}
               <div className="bg-slate-50 p-6 rounded-xl">
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Editar sua avaliação</h2>
                 <form onSubmit={handleUpdateRating} className="space-y-4">
                   
-                  {/* Barra de seleção de nota (Slider) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <label className="block text-sm font-medium text-slate-700">
@@ -173,7 +169,6 @@ function MediaRatedDetails() {
                     </div>
                   </div>
 
-                  {/* Campo de Comentário */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Comentário (opcional)
@@ -187,7 +182,6 @@ function MediaRatedDetails() {
                     />
                   </div>
 
-                  {/* Botões de Ação */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button
                       type="submit"

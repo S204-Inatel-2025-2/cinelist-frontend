@@ -5,7 +5,7 @@ import { useMessage } from '../hooks/useMessage';
 import { useUser } from '../context/UserContext';
 import Message from '../components/Message';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { createList, getUserLists, deleteList, getList } from '../services/lists';
+import { createList, getUserLists, deleteList } from '../services/lists';
 
 function Lists() {
   const [lists, setLists] = useState([]);
@@ -36,7 +36,6 @@ function Lists() {
 
   const handleCreateList = async (e) => {
     e.preventDefault();
-
     if (!newListName.trim()) {
       return showMessage('Digite um nome para a lista', 'error');
     }
@@ -78,23 +77,23 @@ function Lists() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Message message={message} type={type} />
 
-      <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-12 shadow-sm">
+        <div className="max-w-[1600px] mx-auto px-8 lg:px-12 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <List className="w-10 h-10" />
             <h1 className="text-4xl font-bold">Minhas Listas</h1>
           </div>
-          <p className="text-center text-slate-300">
+          <p className="text-slate-300">
             Organize suas mídias favoritas em listas personalizadas
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
+        <div className="flex justify-between items-center mb-10">
           <h2 className="text-2xl font-bold text-slate-900">
             {lists.length} {lists.length === 1 ? 'Lista' : 'Listas'}
           </h2>
@@ -108,7 +107,7 @@ function Lists() {
         </div>
 
         {lists.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-20">
             <List className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-900 mb-2">
               Nenhuma lista criada ainda
@@ -124,7 +123,7 @@ function Lists() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {lists.map((list) => (
               <div
                 key={list.id}
