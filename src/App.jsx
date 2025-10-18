@@ -14,6 +14,7 @@ import MediaDetails from './pages/MediaDetails';
 import MediaRatedDetails from './pages/MediaRatedDetails'; // <-- 1. Importe o componente
 import Lists from './pages/Lists';
 import ListDetails from './pages/ListDetails';
+import ListDetailsItem from './pages/ListDetailsItem';
 import Profile from './pages/Profile';
 
 function PrivateRoute({ children }) {
@@ -115,6 +116,14 @@ function AppContent() {
             element={
               <PrivateRoute>
                 <ListDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/lists/:listId/item/:id"
+            element={
+              <PrivateRoute>
+                <ListDetailsItem />
               </PrivateRoute>
             }
           />

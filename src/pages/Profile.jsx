@@ -1,8 +1,9 @@
-// src/pages/Profile.jsx
 import { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Star, List } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Calendar, Star, List, Eye, Trash2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getUserRatings } from '../services/media';
+import { getUserLists, deleteList } from '../services/lists';
 import MediaRatedCard from '../components/MediaRatedCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useMessage } from '../hooks/useMessage';
@@ -10,60 +11,72 @@ import Message from '../components/Message';
 
 function Profile() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [ratings, setRatings] = useState([]);
+  const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const { message, type, showMessage } = useMessage();
 
-  useEffect(() => {
-    const fetchRatings = async () => {
-      setLoading(true);
-      try {
-        const userId = 10;
-        console.log('Buscando avaliações para o usuário fixo:', userId);
-        const response = await getUserRatings(userId);
-        console.log('Resposta recebida:', response);
-        setRatings(response.results || []);
-      } catch (error) {
-        showMessage('Erro ao carregar avaliações.', 'error');
-        console.error('Falha ao buscar avaliações do usuário:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const FIXED_USER_ID = 10; // Na aplicação real, este viria do contexto do usuário
 
-    fetchRatings();
+  // Busca todos os dados do perfil (avaliações e listas) de uma só vez
+  const fetchProfileData = async () => {
+    setLoading(true);
+    try {
+      const [ratingsResponse, listsResponse] = await Promise.all([
+        getUserRatings(FIXED_USER_ID),
+        getUserLists({ user_id: FIXED_USER_ID })
+      ]);
+
+      setRatings(ratingsResponse.results || []);
+      setLists(listsResponse || []);
+    } catch (error) {
+      showMessage('Erro ao carregar dados do perfil.', 'error');
+      console.error('Falha ao buscar dados do perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
   }, []);
 
+  // Funções para manipular as listas
+  const handleDeleteList = async (listId) => {
+    if (!confirm('Tem certeza que deseja excluir esta lista e todos os seus itens?')) return;
+
+    try {
+      await deleteList({ 
+        lista_id: listId, 
+        user_id: FIXED_USER_ID,
+      });
+      showMessage('Lista excluída com sucesso!', 'success');
+      fetchProfileData(); // Recarrega os dados para atualizar a UI
+    } catch (error) {
+      showMessage('Erro ao excluir lista', 'error');
+    }
+  };
+
+  const handleViewList = (listId) => {
+    navigate(`/lists/${listId}`);
+  };
+
+  // Normaliza os dados de mídias avaliadas para o componente MediaRatedCard
   const normalizeRatedData = (item) => {
     let id;
-    let title;
-    let overview;
-    let rating;
-    let poster_path;
-    let comment;
-
-    if (item.type === 'movie') {
-      id = item.movie_id;
-    } else if (item.type === 'serie') {
-      id = item.serie_id;
-    } else if (item.type === 'anime') {
-      id = item.anime_id;
-    }
-
-    title = item.title || item.name || 'Sem título';
-    overview = item.overview || item.description || 'Sem descrição disponível.';
-    rating = item.rating ?? item.score ?? 0;
-    poster_path = item.poster_path || item.image || null;
-    comment = item.comment || null;
+    if (item.type === 'movie') id = item.movie_id;
+    else if (item.type === 'serie') id = item.serie_id;
+    else if (item.type === 'anime') id = item.anime_id;
 
     return {
       id,
       type: item.type,
-      title,
-      overview,
-      vote_average: rating,
-      poster_path,
-      comment,
+      title: item.title || item.name || 'Sem título',
+      overview: item.overview || item.description || 'Sem descrição disponível.',
+      vote_average: item.rating ?? item.score ?? 0,
+      poster_path: item.poster_path || item.image || null,
+      comment: item.comment || null,
     };
   };
 
@@ -92,7 +105,7 @@ function Profile() {
       </div>
 
       {/* Conteúdo */}
-      <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
+      <div className="flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 pt-16 pb-12">
         {/* Métricas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
@@ -104,7 +117,9 @@ function Profile() {
           </div>
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <List className="w-12 h-12 text-blue-500 mx-auto mb-3" />
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">0</h3>
+            <h3 className="text-3xl font-bold text-slate-900 mb-1">
+              {loading ? '...' : lists.length}
+            </h3>
             <p className="text-slate-600">Listas</p>
           </div>
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
@@ -113,34 +128,6 @@ function Profile() {
               {new Date().getFullYear()}
             </h3>
             <p className="text-slate-600">Membro desde</p>
-          </div>
-        </div>
-
-        {/* Informações do perfil */}
-        <div className="bg-white rounded-xl shadow-md p-8 mb-10">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center space-x-2">
-            <User className="w-6 h-6" />
-            <span>Informações do Perfil</span>
-          </h2>
-          <div className="space-y-3">
-            <div className="flex justify-between py-3 border-b border-slate-200">
-              <span className="text-slate-600">Nome</span>
-              <span className="font-medium text-slate-900">
-                {user?.name || 'Usuário #10'}
-              </span>
-            </div>
-            {user?.email && (
-              <div className="flex justify-between py-3 border-b border-slate-200">
-                <span className="text-slate-600">Email</span>
-                <span className="font-medium text-slate-900">{user.email}</span>
-              </div>
-            )}
-            <div className="flex justify-between py-3">
-              <span className="text-slate-600">Status</span>
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                Ativo
-              </span>
-            </div>
           </div>
         </div>
 
@@ -163,9 +150,57 @@ function Profile() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-slate-600">
-                Você ainda não avaliou nenhuma mídia.
-              </p>
+              <p className="text-slate-600">Você ainda não avaliou nenhuma mídia.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Listas do Usuário */}
+        <div className="bg-white rounded-xl shadow-md p-8 mt-10">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center space-x-2">
+            <List className="w-6 h-6" />
+            <span>Minhas Listas</span>
+          </h2>
+          {loading ? (
+            <LoadingSpinner text="Carregando listas..." />
+          ) : lists.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {lists.map((list) => (
+                <div
+                  key={list.id}
+                  className="bg-slate-50 border border-slate-200 rounded-xl hover:shadow-lg transition-shadow p-6 flex flex-col"
+                >
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{list.nome}</h3>
+                  {list.description && (
+                    <p className="text-slate-600 mb-4 line-clamp-2 flex-grow">{list.description}</p>
+                  )}
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-200">
+                    <span className="text-sm text-slate-500">
+                      {list.item_count || 0} {list.item_count === 1 ? 'item' : 'itens'}
+                    </span>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleViewList(list.id)}
+                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        title="Ver lista"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteList(list.id)}
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                        title="Excluir lista"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-slate-600">Você ainda não criou nenhuma lista.</p>
             </div>
           )}
         </div>

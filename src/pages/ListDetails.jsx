@@ -38,7 +38,7 @@ function ListDetails() {
   // 2. Função para lidar com a remoção de um item da lista
   const handleRemoveItem = async (media) => {
     // Pede confirmação ao usuário antes de remover
-    if (!confirm(`Tem certeza que deseja remover "${media.title || media.name}" da lista?`)) {
+    if (!confirm(`Tem certeza que deseja remover esse item da lista?`)) {
       return;
     }
 
@@ -112,18 +112,27 @@ function ListDetails() {
         </h2>
         
         {listData.itens.length > 0 ? (
-          // 3. Layout em grade para exibir os MediaCards
+          // Layout em grade para exibir os MediaCards
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
             {listData.itens.map((item) => (
               <MediaCard 
                 key={`${item.media_type}-${item.id}`} // Chave mais robusta
                 media={item} 
-                onRemoveFromList={handleRemoveItem} // Passa a função de remoção para o card
+                onRemoveFromList={handleRemoveItem} // Passa a função de remoção
+                listId={id} // Passa o ID da lista para navegação contextual
               />
             ))}
           </div>
         ) : (
-          <p className="text-slate-600">Não há itens nesta lista ainda.</p>
+          <div className="text-center py-16">
+              <List className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
+                Lista Vazia
+              </h3>
+              <p className="text-slate-600">
+                Adicione filmes, séries ou animes para vê-los aqui.
+              </p>
+          </div>
         )}
       </div>
     </div>

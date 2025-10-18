@@ -16,12 +16,17 @@ const getImageUrl = (path) => {
   return `https://image.tmdb.org/t/p/w500${path}`;
 };
 
-function MediaCard({ media, onAddToList , onRemoveFromList}) {
+function MediaCard({ media, onAddToList , onRemoveFromList, listId}) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    // Passa o objeto 'media' já padronizado para a página de detalhes
-    navigate(`/media/${media.id}`, { state: { media } });
+    if (listId) {
+      // Se veio de uma lista, navega para a nova rota
+      navigate(`/lists/${listId}/item/${media.id}`, { state: { media } });
+    } else {
+      // Senão, navega para a rota padrão
+      navigate(`/media/${media.id}`, { state: { media } });
+    }
   };
   
   // Extrai o título corretamente, mesmo que seja um objeto
