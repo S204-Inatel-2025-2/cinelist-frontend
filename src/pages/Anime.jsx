@@ -80,6 +80,11 @@ function Anime() {
         lista_id: listId,
         media_id: selectedMedia.id,
         media_type: selectedMedia.type,
+        title: selectedMedia.title || selectedMedia.name,
+        poster_path: selectedMedia.poster_path,
+        backdrop_path: selectedMedia.backdrop_path,
+        overview: selectedMedia.overview,
+        vote_average: selectedMedia.vote_average,
       };
       await addItemToList(payload);
       showMessage(`"${selectedMedia.title || selectedMedia.name}" adicionado à lista!`, 'success');

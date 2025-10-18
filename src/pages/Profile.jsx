@@ -76,6 +76,7 @@ function Profile() {
       overview: (item.overview || item.description || '').replace(/<[^>]*>/g, '') || 'Sem descrição disponível.',
       vote_average: item.rating ?? item.score ?? 0,
       poster_path: item.poster_path || item.image || null,
+      backdrop_path: item.backdrop_path || null,
       comment: item.comment || null,
     };
   };
