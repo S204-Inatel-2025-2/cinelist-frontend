@@ -9,6 +9,15 @@ import AddToListModal from '../components/AddToListModal'; // 1. Importar modal
 import { getPopularSeries, searchSeries } from '../services/series';
 import { getUserLists, addItemToList } from '../services/lists'; // 2. Importar serviços de lista
 
+const removeDuplicatesById = (mediaList) => {
+  if (!Array.isArray(mediaList)) return [];
+  const mediaMap = new Map();
+  mediaList.forEach(media => {
+    mediaMap.set(media.id, media);
+  });
+  return Array.from(mediaMap.values());
+};
+
 function Series() {
   const [series, setSeries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +39,8 @@ function Series() {
     setLoading(true);
     try {
       const data = await getPopularSeries();
-      setSeries((data || []).slice(0, 40));
+      const uniqueSeries = removeDuplicatesById(data || []);
+      setSeries(uniqueSeries.slice(0, 40));
     } catch (error) {
       showMessage('Erro ao carregar séries', 'error');
     } finally {
@@ -42,7 +52,8 @@ function Series() {
     setSearching(true);
     try {
       const results = await searchSeries(query);
-      setSeries((results || []).slice(0, 40)); // CORREÇÃO: Usar 'results' em vez de 'data'
+      const uniqueSeries = removeDuplicatesById(results || []);
+      setSeries(uniqueSeries.slice(0, 40));
       if (!results || results.length === 0) {
         showMessage('Nenhuma série encontrada', 'warning');
       }

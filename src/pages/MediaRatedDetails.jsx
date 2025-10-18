@@ -96,6 +96,8 @@ function MediaRatedDetails() {
 
   const backdropUrl = getImageUrl(media.backdrop_path, 'original');
   const posterUrl = getImageUrl(media.poster_path, 'w500');
+  console.log("backdropUrl: ", backdropUrl)
+  console.log("posterUrl: ", posterUrl)
 
   return (
     <div className="min-h-screen bg-slate-50">

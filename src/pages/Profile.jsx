@@ -73,7 +73,7 @@ function Profile() {
       id,
       type: item.type,
       title: item.title || item.name || 'Sem título',
-      overview: item.overview || item.description || 'Sem descrição disponível.',
+      overview: (item.overview || item.description || '').replace(/<[^>]*>/g, '') || 'Sem descrição disponível.',
       vote_average: item.rating ?? item.score ?? 0,
       poster_path: item.poster_path || item.image || null,
       comment: item.comment || null,

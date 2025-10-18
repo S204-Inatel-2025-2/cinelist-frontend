@@ -49,8 +49,11 @@ function ListDetailsItem() {
     );
   }
 
-  const backdropUrl = getImageUrl(media.backdrop_path, 'original');
+  const backdropPath = media.bannerImage || media.backdrop_path;
+  const backdropUrl = getImageUrl(backdropPath, 'original');
   const posterUrl = getImageUrl(media.poster_path, 'w500');
+  console.log("backdropUrl: ", backdropUrl)
+  console.log("posterUrl: ", posterUrl)
   const releaseDate = media.release_date || (media.startDate ? `${media.startDate.year}` : null);
 
   return (
