@@ -6,9 +6,9 @@ import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import AddToListModal from '../components/AddToListModal'; // 1. Importar modal
+import AddToListModal from '../components/AddToListModal';
 import { getPopularAnime, searchAnime } from '../services/anime';
-import { getUserLists, addItemToList } from '../services/lists'; // 2. Importar serviços de lista
+import { getUserLists, addItemToList } from '../services/lists';
 
 function Anime() {
   const [anime, setAnime] = useState([]);
@@ -128,55 +128,53 @@ function Anime() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="flex flex-col min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white py-12 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-8 lg:px-12">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <Monitor className="w-10 h-10" />
-              <h1 className="text-4xl font-bold">Animes</h1>
-            </div>
-            <p className="text-orange-100 text-lg mb-8">
-              Explore os melhores animes
-            </p>
-            <div className="flex justify-center w-full max-w-md">
-              <SearchBar onSearch={handleSearch} placeholder="Buscar animes..." />
-            </div>
+      <header className="bg-gradient-to-r from-orange-600 to-red-600 text-white py-16 lg:py-18 shadow-sm">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <Monitor className="w-10 h-10" />
+            <h1 className="text-4xl font-bold">Animes</h1>
+          </div>
+          <p className="text-lg text-orange-100 mb-8"> Explore os melhores animes </p>
+          <div className="flex justify-center mt-8">
+            <SearchBar onSearch={handleSearch} placeholder="Buscar animes..." />
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
-        {searching ? (
-          <LoadingSpinner text="Buscando animes..." />
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-slate-900">
-                {anime.length} {anime.length === 1 ? 'Anime' : 'Animes'}
-              </h2>
-              <button
-                onClick={loadAnime}
-                className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
-              >
-                Recarregar
-              </button>
-            </div>
+      <main className="flex flex-col min-h-screen flex-1">
+        <div className="max-w-[1600px] mx-auto w-full px-6 lg:px-12 mt-12 mb-12">
+          {searching ? (
+            <LoadingSpinner text="Buscando animes..." />
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {anime.length} {anime.length === 1 ? 'Anime' : 'Animes'}
+                </h2>
+                <button
+                  onClick={loadAnime}
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+                >
+                  Recarregar
+                </button>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {anime.map((item) => (
-                <MediaCard
-                  key={item.id}
-                  media={normalizeAnimeData(item)}
-                  onAddToList={handleOpenAddToListModal}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {anime.map((item) => (
+                  <MediaCard
+                    key={item.id}
+                    media={normalizeAnimeData(item)}
+                    onAddToList={handleOpenAddToListModal}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </main>
 
       <AddToListModal
         isOpen={isAddToListModalOpen}

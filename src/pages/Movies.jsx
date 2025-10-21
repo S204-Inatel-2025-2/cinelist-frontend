@@ -6,9 +6,9 @@ import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import AddToListModal from '../components/AddToListModal'; // 1. Importar modal
+import AddToListModal from '../components/AddToListModal';
 import { getPopularMovies, searchMovies } from '../services/movies';
-import { getUserLists, addItemToList } from '../services/lists'; // 2. Importar serviços de lista
+import { getUserLists, addItemToList } from '../services/lists';
 
 const removeDuplicatesById = (mediaList) => {
   if (!Array.isArray(mediaList)) return [];
@@ -129,48 +129,50 @@ function Movies() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16 lg:py-18 shadow-sm">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <Film className="w-10 h-10" />
             <h1 className="text-4xl font-bold">Filmes</h1>
           </div>
-          <p className="text-center text-blue-100 mb-6">
+          <p className="text-lg text-blue-100 mb-8">
             Explore os melhores filmes
           </p>
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-8">
             <SearchBar onSearch={handleSearch} placeholder="Buscar filmes..." />
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {searching ? (
-          <LoadingSpinner text="Buscando filmes..." />
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-900">
-                {movies.length} {movies.length === 1 ? 'Filme' : 'Filmes'}
-              </h2>
-              <button
-                onClick={loadMovies}
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Recarregar
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {movies.map((movie) => (
-                <MediaCard key={movie.id} media={{ ...movie, type: 'movie' }} onAddToList={handleOpenAddToListModal} />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      <main className="flex flex-col min-h-screen flex-1">
+        <div className="max-w-[1600px] mx-auto w-full px-6 lg:px-12 mt-12 mb-12">
+          {searching ? (
+            <LoadingSpinner text="Buscando filmes..." />
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {movies.length} {movies.length === 1 ? 'Filme' : 'Filmes'}
+                </h2>
+                <button
+                  onClick={loadMovies}
+                  className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  Recarregar
+                </button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {movies.map((movie) => (
+                  <MediaCard key={movie.id} media={{ ...movie, type: 'movie' }} onAddToList={handleOpenAddToListModal} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </main>
 
       <AddToListModal
         isOpen={isAddToListModalOpen}

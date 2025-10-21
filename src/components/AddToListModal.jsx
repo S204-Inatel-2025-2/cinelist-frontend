@@ -1,3 +1,4 @@
+// src/components/AddToListModal.jsx
 import { List as ListIcon, X } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -25,7 +26,8 @@ function AddToListModal({ isOpen, onClose, lists, onSelectList, isLoading }) {
           </button>
         </div>
 
-        <div className="mt-4 max-h-60 overflow-y-auto">
+        {/* CORREÇÃO: Aplicado `min-h-[100px]` e `flex` para centralizar o spinner/mensagem */}
+        <div className="mt-4 max-h-60 overflow-y-auto min-h-[100px] flex flex-col justify-center">
           {isLoading ? (
             <LoadingSpinner text="Carregando listas..." />
           ) : lists.length > 0 ? (

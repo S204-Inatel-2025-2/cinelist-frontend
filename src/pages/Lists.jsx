@@ -9,7 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { createList, getUserLists, deleteList } from '../services/lists';
 
 function Lists() {
-const [lists, setLists] = useState([]);
+  const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -51,7 +51,7 @@ const [lists, setLists] = useState([]);
         description: newListDescription.trim() || null,
         user_id: FIXED_USER_ID,
       };
-      
+
       await createList(payload);
       
       showMessage('Lista criada com sucesso!', 'success');
@@ -66,15 +66,15 @@ const [lists, setLists] = useState([]);
 
   const handleDeleteList = async (listId) => {
     if (!user) {
-        showMessage('Você precisa estar logado para excluir uma lista.', 'error');
-        return;
+      showMessage('Você precisa estar logado para excluir uma lista.', 'error');
+      return;
     }
 
     if (!confirm('Tem certeza que deseja excluir esta lista?')) return;
 
     try {
-      await deleteList({ 
-        lista_id: listId, 
+      await deleteList({
+        lista_id: listId,
         user_id: FIXED_USER_ID, // Usando o ID fixo
       });
       showMessage('Lista excluída com sucesso!', 'success');
@@ -97,88 +97,90 @@ const [lists, setLists] = useState([]);
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="flex flex-col min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
-      <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-12 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-8 lg:px-12 text-center">
+      <header className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-16 lg:py-24 shadow-sm">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <List className="w-10 h-10" />
             <h1 className="text-4xl font-bold">Minhas Listas</h1>
           </div>
-          <p className="text-slate-300">
+          <p className="text-lg text-slate-300 mb-8">
             Organize suas mídias favoritas em listas personalizadas
           </p>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
-        <div className="flex justify-between items-center mb-10">
-          <h2 className="text-2xl font-bold text-slate-900">
-            {lists.length} {lists.length === 1 ? 'Lista' : 'Listas'}
-          </h2>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Nova Lista</span>
-          </button>
-        </div>
-
-        {lists.length === 0 ? (
-          <div className="text-center py-20">
-            <List className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">
-              Nenhuma lista criada ainda
-            </h3>
-            <p className="text-slate-600 mb-6">
-              Crie sua primeira lista para organizar suas mídias favoritas
-            </p>
+      <main className="flex flex-col flex-1">
+        <div className="max-w-[1600px] mx-auto w-full px-6 lg:px-12 mt-12 mb-12">
+          <div className="flex justify-between items-center mb-10">
+            <h2 className="text-2xl font-bold text-slate-900">
+              {lists.length} {lists.length === 1 ? 'Lista' : 'Listas'}
+            </h2>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
             >
-              Criar Primeira Lista
+              <Plus className="w-5 h-5" />
+              <span>Nova Lista</span>
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {lists.map((list) => (
-              <div
-                key={list.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6"
+
+          {lists.length === 0 ? (
+            <div className="text-center py-20">
+              <List className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
+                Nenhuma lista criada ainda
+              </h3>
+              <p className="text-slate-600 mb-6">
+                Crie sua primeira lista para organizar suas mídias favoritas
+              </p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
               >
-                {/* CORREÇÃO: 'list.name' para 'list.nome' para corresponder ao backend */}
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{list.nome}</h3>
-                {list.description && (
-                  <p className="text-slate-600 mb-4 line-clamp-2">{list.description}</p>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-500">
-                    {list.item_count || 0} {list.item_count === 1 ? 'item' : 'itens'}
-                  </span>
-                  <div className="flex space-x-2">
-                    {/* CORREÇÃO: Adicionado onClick para o botão de visualizar */}
-                    <button
-                      onClick={() => handleViewList(list.id)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <Eye className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteList(list.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                Criar Primeira Lista
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {lists.map((list) => (
+                <div
+                  key={list.id}
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6"
+                >
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{list.nome}</h3>
+                  {list.description && (
+                    <p className="text-slate-600 mb-4 line-clamp-2">{list.description}</p>
+                  )}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <span className="text-sm text-slate-500">
+                      {list.item_count || 0} {list.item_count === 1 ? 'item' : 'itens'}
+                    </span>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleViewList(list.id)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                        title="Visualizar Lista"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteList(list.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                        title="Excluir Lista"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
 
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -219,13 +221,13 @@ const [lists, setLists] = useState([]);
                     setNewListName('');
                     setNewListDescription('');
                   }}
-                  className="flex-1 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+                  className="flex-1 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Criar Lista
                 </button>

@@ -4,7 +4,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
-import { updateRating, deleteRating } from '../services/media'; 
+import { updateRating, deleteRating } from '../services/media';
 
 function MediaRatedDetails() {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ function MediaRatedDetails() {
         comment: review.trim(),
         user_id: 10,
       };
-      await updateRating(payload); 
+      await updateRating(payload);
       showMessage('Avaliação atualizada com sucesso!', 'success');
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao atualizar avaliação.';
@@ -101,13 +101,16 @@ function MediaRatedDetails() {
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
+      {/* Botão Voltar ajustado para padding consistente */}
       <button
         onClick={() => navigate(-1)}
-        className="fixed top-20 left-4 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        className="fixed top-20 left-6 lg:left-12 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        title="Voltar"
       >
         <ArrowLeft className="w-6 h-6 text-slate-700" />
       </button>
 
+      {/* Seção de Fundo (Backdrop) */}
       <div className="relative h-96 bg-gradient-to-br from-slate-900 to-slate-700">
         {backdropUrl && (
           <img
@@ -116,38 +119,40 @@ function MediaRatedDetails() {
             className="w-full h-full object-cover opacity-40"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 to-transparent" />
+        {/* Gradiente para fundir o fundo com o conteúdo principal */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/70 to-transparent" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10 pb-16">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex flex-col md:flex-row gap-8">
+      {/* Conteúdo Principal - Aplicando o container de 1600px */}
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 -mt-32 relative z-10 pb-16">
+        <main className="bg-white rounded-2xl shadow-xl p-8 lg:p-12">
+          {/* Aplicando o gap para o pôster maior */}
+          <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
             {posterUrl && (
               <img
                 src={posterUrl}
                 alt={getMediaTitle(media)}
-                // LINHA ALTERADA AQUI
-                className="w-64 h-auto object-cover rounded-xl shadow-lg mx-auto md:mx-0"
+                className="w-96 h-auto object-contain rounded-xl shadow-lg mx-auto md:mx-0 flex-shrink-0"
               />
             )}
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold text-slate-900 mb-4">{getMediaTitle(media)}</h1>
-              
+            <div className="flex-1 pt-4 md:pt-0">
+              <h1 className="text-4xl font-extrabold text-slate-900 mb-4">{getMediaTitle(media)}</h1>
+
               <h2 className="text-2xl font-bold text-slate-900 mb-3 mt-6">Sinopse</h2>
-              <p className="text-slate-700 leading-relaxed mb-8">
+              <p className="text-lg text-slate-700 leading-relaxed mb-8">
                 {media.overview || 'Sem descrição disponível.'}
               </p>
 
-              <div className="bg-slate-50 p-6 rounded-xl">
+              <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Editar sua avaliação</h2>
                 <form onSubmit={handleUpdateRating} className="space-y-4">
-                  
+
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <label className="block text-sm font-medium text-slate-700">
                         Nota
                       </label>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-lg font-bold">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-lg font-bold min-w-[50px] text-center">
                         {parseFloat(rating || 0).toFixed(1)}
                       </span>
                     </div>
@@ -205,7 +210,7 @@ function MediaRatedDetails() {
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

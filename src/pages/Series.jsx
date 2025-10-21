@@ -6,9 +6,9 @@ import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
 import MediaCard from '../components/MediaCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import AddToListModal from '../components/AddToListModal'; // 1. Importar modal
+import AddToListModal from '../components/AddToListModal';
 import { getPopularSeries, searchSeries } from '../services/series';
-import { getUserLists, addItemToList } from '../services/lists'; // 2. Importar serviços de lista
+import { getUserLists, addItemToList } from '../services/lists';
 
 const removeDuplicatesById = (mediaList) => {
   if (!Array.isArray(mediaList)) return [];
@@ -125,27 +125,24 @@ function Series() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="flex flex-col min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
-      <div className="bg-gradient-to-r from-green-600 to-green-800 text-white py-12 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-8 lg:px-12">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <Tv className="w-10 h-10" />
-              <h1 className="text-4xl font-bold">Séries</h1>
-            </div>
-            <p className="text-green-100 text-lg mb-8">
-              Explore as melhores séries
-            </p>
-            <div className="flex justify-center w-full max-w-md">
-              <SearchBar onSearch={handleSearch} placeholder="Buscar séries..." />
-            </div>
-          </div>
+    <header className="bg-gradient-to-r from-green-600 to-green-800 text-white py-16 lg:py-18 shadow-sm">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 text-center">
+        <div className="flex items-center justify-center space-x-3 mb-4">
+          <Tv className="w-10 h-10" />
+          <h1 className="text-4xl font-bold">Séries</h1>
+        </div>
+        <p className="text-lg text-green-100 mb-8"> Explore as melhores séries </p>
+        <div className="flex justify-center mt-8">
+          <SearchBar onSearch={handleSearch} placeholder="Buscar séries..." />
         </div>
       </div>
+    </header>
 
-      <div className="flex-1 max-w-[1600px] mx-auto px-8 lg:px-12 pt-16 pb-12">
+    <main className="flex flex-col min-h-screen flex-1">
+      <div className="max-w-[1600px] mx-auto w-full px-6 lg:px-12 mt-12 mb-12">
         {searching ? (
           <LoadingSpinner text="Buscando séries..." />
         ) : (
@@ -161,12 +158,11 @@ function Series() {
                 Recarregar
               </button>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {series.map((show) => (
                 <MediaCard
                   key={show.id}
-                  media={{ ...show, type: 'serie' }} // CORREÇÃO: 'tv' para 'serie' para corresponder ao backend
+                  media={{ ...show, type: 'serie' }}
                   onAddToList={handleOpenAddToListModal}
                 />
               ))}
@@ -174,6 +170,7 @@ function Series() {
           </>
         )}
       </div>
+    </main>
 
       <AddToListModal
         isOpen={isAddToListModalOpen}
