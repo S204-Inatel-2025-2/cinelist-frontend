@@ -10,6 +10,7 @@ import MediaCard from '../components/MediaCard';
 function ListDetails() {
   const [listData, setListData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { id } = useParams();
   const { message, type, showMessage } = useMessage();
   const FIXED_USER_ID = 10;
@@ -57,24 +58,36 @@ function ListDetails() {
 
   // Função para lidar com a remoção de um item da lista
   const handleRemoveItem = async (media) => {
+    // Se já estiver enviando, ignora cliques adicionais
+    if (isSubmitting) return; 
+
     if (!confirm(`Tem certeza que deseja remover "${media.title || media.name}" da lista?`)) {
       return;
     }
+
+    // Ativa a trava
+    setIsSubmitting(true);
 
     try {
       const payload = {
         user_id: FIXED_USER_ID,
         lista_id: parseInt(id),
         media_id: media.id,
-        // Usa a propriedade 'type' já normalizada
         media_type: media.type, 
       };
       await deleteListItem(payload);
       showMessage('Item removido com sucesso!', 'success');
-      fetchListDetails(); // Recarrega a lista
+      
+      // Espera a lista ser recarregada antes de liberar a trava
+      await fetchListDetails(); 
+    
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao remover item.';
       showMessage(errorMessage, 'error');
+    
+    } finally {
+      // Libera a trava em qualquer caso (sucesso ou erro)
+      setIsSubmitting(false); 
     }
   };
 
@@ -133,6 +146,7 @@ function ListDetails() {
                 media={normalizeItemData(item)} 
                 onRemoveFromList={handleRemoveItem}
                 listId={id}
+                isSubmitting={isSubmitting}
               />
             ))}
           </div>
@@ -153,3 +167,4 @@ function ListDetails() {
 }
 
 export default ListDetails;
+ 
