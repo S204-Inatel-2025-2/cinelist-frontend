@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import { useState, useEffect } from 'react';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
@@ -18,7 +19,6 @@ function Home() {
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
 
-  // --- States for "Add to List" Modal ---
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [userLists, setUserLists] = useState([]);

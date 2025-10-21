@@ -1,3 +1,4 @@
+// src/pages/Anime.jsx
 import { useState, useEffect } from 'react';
 import { Monitor } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';

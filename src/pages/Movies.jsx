@@ -1,3 +1,4 @@
+// src/pages/Movies.jsx
 import { useState, useEffect } from 'react';
 import { Film } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';

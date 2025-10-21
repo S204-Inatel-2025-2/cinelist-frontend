@@ -1,3 +1,4 @@
+// src/pages/Series.jsx
 import { useState, useEffect } from 'react';
 import { Tv } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
