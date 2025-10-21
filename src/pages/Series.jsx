@@ -85,7 +85,11 @@ function Series() {
   };
 
   const handleSelectList = async (listId) => {
+    if (loadingLists) return;
     if (!selectedMedia) return;
+
+    setLoadingLists(true);
+    
     try {
       const payload = {
         lista_id: listId,
@@ -97,13 +101,17 @@ function Series() {
         overview: selectedMedia.overview,
         vote_average: selectedMedia.vote_average,
       };
+
       await addItemToList(payload);
       showMessage(`"${selectedMedia.name}" adicionado à lista!`, 'success');
+      
+      handleCloseModal();
+
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao adicionar item';
       showMessage(errorMessage, 'error');
-    } finally {
-      handleCloseModal();
+      
+      setLoadingLists(false);
     }
   };
 

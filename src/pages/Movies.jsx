@@ -89,7 +89,11 @@ function Movies() {
   };
 
   const handleSelectList = async (listId) => {
+    if (loadingLists) return;
     if (!selectedMedia) return;
+
+    setLoadingLists(true);
+    
     try {
       const payload = {
         lista_id: listId,
@@ -101,13 +105,17 @@ function Movies() {
         overview: selectedMedia.overview,
         vote_average: selectedMedia.vote_average,
       };
+
       await addItemToList(payload);
       showMessage(`"${selectedMedia.title || selectedMedia.name}" adicionado à lista!`, 'success');
+      
+      handleCloseModal();
+
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao adicionar item';
       showMessage(errorMessage, 'error');
-    } finally {
-      handleCloseModal();
+      
+      setLoadingLists(false);
     }
   };
 
@@ -151,7 +159,7 @@ function Movies() {
                 onClick={loadMovies}
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                Recarregar Populares
+                Recarregar
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

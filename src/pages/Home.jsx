@@ -94,12 +94,15 @@ function Home() {
   };
 
   const handleSelectList = async (listId) => {
+    if (loadingLists) return;
     if (!selectedMedia) return;
+
+    setLoadingLists(true);
+    
     try {
       const payload = {
         lista_id: listId,
         media_id: selectedMedia.id,
-        // Garante que 'tv' seja mapeado para 'serie' como no backend
         media_type: selectedMedia.type === 'tv' ? 'serie' : selectedMedia.type,
         title: selectedMedia.title || selectedMedia.name,
         poster_path: selectedMedia.poster_path,
@@ -107,14 +110,18 @@ function Home() {
         overview: selectedMedia.overview,
         vote_average: selectedMedia.vote_average,
       };
+
       await addItemToList(payload);
       showMessage(`"${selectedMedia.title || selectedMedia.name}" adicionado à lista!`, 'success');
+      
+      handleCloseModal();
+
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao adicionar item';
       showMessage(errorMessage, 'error');
-    } finally {
-      handleCloseModal();
-    }
+      
+      setLoadingLists(false);
+    } 
   };
 
   const normalizeAnimeData = (anime) => ({
