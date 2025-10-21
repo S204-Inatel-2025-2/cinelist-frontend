@@ -1,5 +1,6 @@
 // src/pages/Home.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
+import { useSearchParams } from 'react-router-dom'; // Adicionado useSearchParams
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
@@ -10,6 +11,17 @@ import AddToListModal from '../components/AddToListModal';
 import { getPopularMedia, searchMedia } from '../services/media';
 import { getUserLists, addItemToList } from '../services/lists';
 
+// Movido para fora do componente para estabilidade no useCallback
+const normalizeAnimeData = (anime) => ({
+  ...anime,
+  type: 'anime',
+  title: anime.title?.romaji || anime.title?.english || 'Sem título',
+  overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
+  poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
+  backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
+  vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
+});
+
 function Home() {
   const [movies, setMovies] = useState([]);
   const [series, setSeries] = useState([]);
@@ -19,37 +31,21 @@ function Home() {
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
 
+  // Adicionado para controle da URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get('q'); // 'q' é o nosso parâmetro de busca
+
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [userLists, setUserLists] = useState([]);
   const [loadingLists, setLoadingLists] = useState(false);
   const FIXED_USER_ID = 10;
 
-  useEffect(() => {
-    loadAllMedia();
-  }, []);
-
-  const loadAllMedia = async () => {
-    setLoading(true);
-    try {
-      const response = await getPopularMedia();
-      const allMedia = response.results || [];
-      setMovies(allMedia.filter(m => m.type === 'movie').slice(0, 10));
-      setSeries(allMedia.filter(m => m.type === 'serie').slice(0, 10));
-      setAnime(allMedia.filter(m => m.type === 'anime').slice(0, 10));
-    } catch {
-      showMessage('Erro ao carregar conteúdo', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  // Lógica de busca extraída para useCallback
+  const fetchSearchResults = useCallback(async (query) => {
+    if (!query) return;
     setSearching(true);
+    setSearchResults([]); // Limpa resultados antigos
     try {
       const response = await searchMedia(query);
       const resultsArray = response?.results || [];
@@ -63,6 +59,46 @@ function Home() {
       setSearchResults([]);
     } finally {
       setSearching(false);
+    }
+  }, [showMessage]); // showMessage é uma dependência estável do hook
+
+  // Lógica de carregar populares extraída para useCallback
+  const loadAllMedia = useCallback(async () => {
+    setLoading(true);
+    setSearchResults([]); // Garante que a busca seja limpa
+    try {
+      const response = await getPopularMedia();
+      const allMedia = response.results || [];
+      setMovies(allMedia.filter(m => m.type === 'movie').slice(0, 10));
+      setSeries(allMedia.filter(m => m.type === 'serie').slice(0, 10));
+      setAnime(allMedia.filter(m => m.type === 'anime').slice(0, 10));
+    } catch {
+      showMessage('Erro ao carregar conteúdo', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showMessage]); // showMessage é uma dependência estável
+
+  // useEffect modificado para decidir o que carregar
+  useEffect(() => {
+    if (urlQuery) {
+      // Se a URL tem uma query, busca
+      setLoading(false); // Para o loading inicial
+      fetchSearchResults(urlQuery);
+    } else {
+      // Senão, carrega os populares
+      loadAllMedia();
+    }
+    // Roda sempre que a query da URL ou as funções memoizadas mudarem
+  }, [urlQuery, fetchSearchResults, loadAllMedia]);
+
+  // handleSearch agora APENAS atualiza a URL
+  // O useEffect acima vai reagir à mudança na URL e chamar fetchSearchResults
+  const handleSearch = (query) => {
+    if (!query.trim()) {
+      setSearchParams({}); // Limpa a URL se a busca for vazia
+    } else {
+      setSearchParams({ q: query }); // Define a query 'q' na URL
     }
   };
 
@@ -111,16 +147,6 @@ function Home() {
     }
   };
 
-  const normalizeAnimeData = (anime) => ({
-    ...anime,
-    type: 'anime',
-    title: anime.title?.romaji || anime.title?.english || 'Sem título',
-    overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
-    poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
-    backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
-    vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
-  });
-
   if (loading) return <div className="min-h-screen bg-slate-50"><LoadingSpinner text="Carregando conteúdo..." /></div>;
 
   return (
@@ -134,7 +160,8 @@ function Home() {
             Explore, avalie e organize filmes, séries e animes em um só lugar.
           </p>
           <div className="flex justify-center">
-            <SearchBar onSearch={handleSearch} />
+            {/* Passa a query da URL de volta para o SearchBar */}
+            <SearchBar onSearch={handleSearch} initialQuery={urlQuery || ''} />
           </div>
         </div>
       </header>
@@ -146,7 +173,8 @@ function Home() {
           <div>
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-slate-900">Resultados da Busca</h2>
-              <button onClick={() => setSearchResults([])} className="text-blue-600 hover:text-blue-700 font-medium">
+              {/* Botão agora limpa a URL */}
+              <button onClick={() => setSearchParams({})} className="text-blue-600 hover:text-blue-700 font-medium">
                 Limpar busca
               </button>
             </div>

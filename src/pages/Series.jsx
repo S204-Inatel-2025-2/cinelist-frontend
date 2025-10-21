@@ -1,5 +1,6 @@
 // src/pages/Series.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
+import { useSearchParams } from 'react-router-dom'; // Adicionado useSearchParams
 import { Tv } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
@@ -25,6 +26,10 @@ function Series() {
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
 
+  // Adicionado para controle da URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get('q');
+
   // --- States para o Modal "Adicionar à Lista" ---
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -32,12 +37,10 @@ function Series() {
   const [loadingLists, setLoadingLists] = useState(false);
   const FIXED_USER_ID = 10;
 
-  useEffect(() => {
-    loadSeries();
-  }, []);
-
-  const loadSeries = async () => {
+  // Envolvido em useCallback
+  const loadSeries = useCallback(async () => {
     setLoading(true);
+    setSearching(false); // Garante que o estado de busca seja resetado
     try {
       const data = await getPopularSeries();
       const uniqueSeries = removeDuplicatesById(data || []);
@@ -47,10 +50,12 @@ function Series() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showMessage]); // Dependência
 
-  const handleSearch = async (query) => {
+  // Nova função de busca envolvida em useCallback
+  const fetchSeriesSearch = useCallback(async (query) => {
     setSearching(true);
+    setLoading(false); // Para o spinner de loading principal
     try {
       const results = await searchSeries(query);
       const uniqueSeries = removeDuplicatesById(results || []);
@@ -62,6 +67,24 @@ function Series() {
       showMessage('Erro ao buscar séries', 'error');
     } finally {
       setSearching(false);
+    }
+  }, [showMessage]); // Dependência
+
+  // useEffect modificado para usar a URL
+  useEffect(() => {
+    if (urlQuery) {
+      fetchSeriesSearch(urlQuery);
+    } else {
+      loadSeries();
+    }
+  }, [urlQuery, loadSeries, fetchSeriesSearch]); // Dependências atualizadas
+
+  // handleSearch agora APENAS atualiza a URL
+  const handleSearch = (query) => {
+    if (!query.trim()) {
+      setSearchParams({}); // Limpa a busca
+    } else {
+      setSearchParams({ q: query }); // Define a busca na URL
     }
   };
 
@@ -136,7 +159,8 @@ function Series() {
         </div>
         <p className="text-lg text-green-100 mb-8"> Explore as melhores séries </p>
         <div className="flex justify-center mt-8">
-          <SearchBar onSearch={handleSearch} placeholder="Buscar séries..." />
+          {/* Passa initialQuery para o SearchBar */}
+          <SearchBar onSearch={handleSearch} placeholder="Buscar séries..." initialQuery={urlQuery || ''} />
         </div>
       </div>
     </header>
@@ -149,13 +173,15 @@ function Series() {
           <>
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-slate-900">
-                {series.length} {series.length === 1 ? 'Série' : 'Séries'}
+                {/* Atualiza o título baseado na busca */}
+                {urlQuery ? `${series.length} resultados para "${urlQuery}"` : `${series.length} Séries Populares`}
               </h2>
+              {/* Botão agora limpa a URL para recarregar populares */}
               <button
-                onClick={loadSeries}
+                onClick={() => setSearchParams({})}
                 className="text-green-600 hover:text-green-700 font-medium transition-colors"
               >
-                Recarregar
+                {urlQuery ? "Limpar Busca" : "Recarregar Populares"}
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

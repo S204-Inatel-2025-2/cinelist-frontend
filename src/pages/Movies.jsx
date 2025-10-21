@@ -1,5 +1,6 @@
 // src/pages/Movies.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
+import { useSearchParams } from 'react-router-dom'; // Adicionado useSearchParams
 import { Film } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
@@ -25,6 +26,10 @@ function Movies() {
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
 
+  // Adicionado para controle da URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get('q');
+
   // --- States para o Modal "Adicionar à Lista" ---
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -32,12 +37,10 @@ function Movies() {
   const [loadingLists, setLoadingLists] = useState(false);
   const FIXED_USER_ID = 10;
 
-  useEffect(() => {
-    loadMovies();
-  }, []);
-
-  const loadMovies = async () => {
+  // Envolvido em useCallback
+  const loadMovies = useCallback(async () => {
     setLoading(true);
+    setSearching(false); // Garante que o estado de busca seja resetado
     try {
       const data = await getPopularMovies();
       const uniqueMovies = removeDuplicatesById(data || []);
@@ -47,14 +50,12 @@ function Movies() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showMessage]); // Dependência
 
-  const handleSearch = async (query) => {
-    if (!query) {
-      loadMovies();
-      return;
-    }
+  // Nova função de busca envolvida em useCallback
+  const fetchMovieSearch = useCallback(async (query) => {
     setSearching(true);
+    setLoading(false); // Para o spinner de loading principal
     try {
       const results = await searchMovies(query);
       const uniqueMovies = removeDuplicatesById(results || []);
@@ -66,6 +67,24 @@ function Movies() {
       showMessage('Erro ao buscar filmes', 'error');
     } finally {
       setSearching(false);
+    }
+  }, [showMessage]); // Dependência
+
+  // useEffect modificado para usar a URL
+  useEffect(() => {
+    if (urlQuery) {
+      fetchMovieSearch(urlQuery);
+    } else {
+      loadMovies();
+    }
+  }, [urlQuery, loadMovies, fetchMovieSearch]); // Dependências atualizadas
+
+  // handleSearch agora APENAS atualiza a URL
+  const handleSearch = (query) => {
+    if (!query.trim()) {
+      setSearchParams({}); // Limpa a busca
+    } else {
+      setSearchParams({ q: query }); // Define a busca na URL
     }
   };
 
@@ -142,7 +161,8 @@ function Movies() {
             Explore os melhores filmes
           </p>
           <div className="flex justify-center mt-8">
-            <SearchBar onSearch={handleSearch} placeholder="Buscar filmes..." />
+            {/* Passa initialQuery para o SearchBar */}
+            <SearchBar onSearch={handleSearch} placeholder="Buscar filmes..." initialQuery={urlQuery || ''} />
           </div>
         </div>
       </header>
@@ -155,13 +175,15 @@ function Movies() {
             <>
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-slate-900">
-                  {movies.length} {movies.length === 1 ? 'Filme' : 'Filmes'}
+                  {/* Atualiza o título baseado na busca */}
+                  {urlQuery ? `${movies.length} resultados para "${urlQuery}"` : `${movies.length} Filmes Populares`}
                 </h2>
+                {/* Botão agora limpa a URL para recarregar populares */}
                 <button
-                  onClick={loadMovies}
+                  onClick={() => setSearchParams({})}
                   className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
                 >
-                  Recarregar
+                  {urlQuery ? "Limpar Busca" : "Recarregar Populares"}
                 </button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

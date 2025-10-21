@@ -1,5 +1,6 @@
 // src/pages/Anime.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
+import { useSearchParams } from 'react-router-dom'; // Adicionado useSearchParams
 import { Monitor } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
@@ -10,11 +11,30 @@ import AddToListModal from '../components/AddToListModal';
 import { getPopularAnime, searchAnime } from '../services/anime';
 import { getUserLists, addItemToList } from '../services/lists';
 
+// Movido para fora do componente para estabilidade no useCallback
+const normalizeAnimeData = (anime) => ({
+  ...anime,
+  type: 'anime',
+  title: anime.title?.romaji || anime.title?.english || 'Sem título',
+  overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
+  release_date: anime.startDate?.year
+    ? `${anime.startDate.year}-${String(anime.startDate.month || 1).padStart(2, '0')}-${String(anime.startDate.day || 1).padStart(2, '0')}`
+    : null,
+  poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
+  backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
+  vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
+  genres: anime.genres ? anime.genres.map((g) => ({ id: g, name: g })) : [],
+});
+
 function Anime() {
   const [anime, setAnime] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
+
+  // Adicionado para controle da URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get('q');
 
   // --- States para o Modal "Adicionar à Lista" ---
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
@@ -23,12 +43,10 @@ function Anime() {
   const [loadingLists, setLoadingLists] = useState(false);
   const FIXED_USER_ID = 10;
 
-  useEffect(() => {
-    loadAnime();
-  }, []);
-
-  const loadAnime = async () => {
+  // Envolvido em useCallback
+  const loadAnime = useCallback(async () => {
     setLoading(true);
+    setSearching(false); // Garante que o estado de busca seja resetado
     try {
       const data = await getPopularAnime();
       setAnime((data || []).slice(0, 40));
@@ -37,13 +55,15 @@ function Anime() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showMessage]); // Dependência
 
-  const handleSearch = async (query) => {
+  // Nova função de busca envolvida em useCallback
+  const fetchAnimeSearch = useCallback(async (query) => {
     setSearching(true);
+    setLoading(false); // Para o spinner de loading principal
     try {
       const results = await searchAnime(query);
-      setAnime((results || []).slice(0, 40)); // CORREÇÃO: Usar 'results' em vez de 'data'
+      setAnime((results || []).slice(0, 40));
       if (!results || results.length === 0) {
         showMessage('Nenhum anime encontrado', 'warning');
       }
@@ -51,6 +71,24 @@ function Anime() {
       showMessage('Erro ao buscar animes', 'error');
     } finally {
       setSearching(false);
+    }
+  }, [showMessage]); // Dependência
+
+  // useEffect modificado para usar a URL
+  useEffect(() => {
+    if (urlQuery) {
+      fetchAnimeSearch(urlQuery);
+    } else {
+      loadAnime();
+    }
+  }, [urlQuery, loadAnime, fetchAnimeSearch]); // Dependências atualizadas
+
+  // handleSearch agora APENAS atualiza a URL
+  const handleSearch = (query) => {
+    if (!query.trim()) {
+      setSearchParams({}); // Limpa a busca
+    } else {
+      setSearchParams({ q: query }); // Define a busca na URL
     }
   };
 
@@ -105,19 +143,7 @@ function Anime() {
     }
   };
 
-  const normalizeAnimeData = (anime) => ({
-    ...anime,
-    type: 'anime',
-    title: anime.title?.romaji || anime.title?.english || 'Sem título',
-    overview: anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'Sem descrição disponível.',
-    release_date: anime.startDate?.year
-      ? `${anime.startDate.year}-${String(anime.startDate.month || 1).padStart(2, '0')}-${String(anime.startDate.day || 1).padStart(2, '0')}`
-      : null,
-    poster_path: anime.coverImage?.large || anime.coverImage?.medium || null,
-    backdrop_path: anime.bannerImage || anime.coverImage?.extraLarge || null,
-    vote_average: anime.averageScore ? anime.averageScore / 10 : 0,
-    genres: anime.genres ? anime.genres.map((g) => ({ id: g, name: g })) : [],
-  });
+  // A função normalizeAnimeData foi movida para fora do componente
 
   if (loading) {
     return (
@@ -139,7 +165,8 @@ function Anime() {
           </div>
           <p className="text-lg text-orange-100 mb-8"> Explore os melhores animes </p>
           <div className="flex justify-center mt-8">
-            <SearchBar onSearch={handleSearch} placeholder="Buscar animes..." />
+            {/* Passa initialQuery para o SearchBar */}
+            <SearchBar onSearch={handleSearch} placeholder="Buscar animes..." initialQuery={urlQuery || ''} />
           </div>
         </div>
       </header>
@@ -152,13 +179,15 @@ function Anime() {
             <>
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-slate-900">
-                  {anime.length} {anime.length === 1 ? 'Anime' : 'Animes'}
+                  {/* Atualiza o título baseado na busca */}
+                  {urlQuery ? `${anime.length} resultados para "${urlQuery}"` : `${anime.length} Animes Populares`}
                 </h2>
+                {/* Botão agora limpa a URL para recarregar populares */}
                 <button
-                  onClick={loadAnime}
+                  onClick={() => setSearchParams({})}
                   className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
                 >
-                  Recarregar
+                  {urlQuery ? "Limpar Busca" : "Recarregar Populares"}
                 </button>
               </div>
 
@@ -166,7 +195,7 @@ function Anime() {
                 {anime.map((item) => (
                   <MediaCard
                     key={item.id}
-                    media={normalizeAnimeData(item)}
+                    media={normalizeAnimeData(item)} // Normalização ainda necessária aqui
                     onAddToList={handleOpenAddToListModal}
                   />
                 ))}
