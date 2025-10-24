@@ -14,6 +14,7 @@ export const AVATAR_MAP = {
   'avatar_10': '/avatars/serie_icon_2.png',
   'avatar_11': '/avatars/serie_icon_3.png',
   'avatar_12': '/avatars/serie_icon_4.jpg',
+  'avatar_13': '/avatars/chris_icon_1.jpg',
 };
 
 // Define qual ID é o padrão
