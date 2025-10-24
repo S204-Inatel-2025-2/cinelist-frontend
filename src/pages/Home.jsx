@@ -1,6 +1,7 @@
 // src/pages/Home.jsx
 import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
-import { useSearchParams } from 'react-router-dom'; // Adicionado useSearchParams
+import { useSearchParams, useNavigate } from 'react-router-dom'; // Adicionado useSearchParams
+import { useUser } from '../context/UserContext';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
@@ -31,6 +32,9 @@ function Home() {
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
 
+  const { user, isAuthenticated } = useUser();
+  const navigate = useNavigate();
+
   // Adicionado para controle da URL
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get('q'); // 'q' é o nosso parâmetro de busca
@@ -39,7 +43,6 @@ function Home() {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [userLists, setUserLists] = useState([]);
   const [loadingLists, setLoadingLists] = useState(false);
-  const FIXED_USER_ID = 10;
 
   // Lógica de busca extraída para useCallback
   const fetchSearchResults = useCallback(async (query) => {
@@ -103,11 +106,19 @@ function Home() {
   };
 
   const handleOpenAddToListModal = async (media) => {
+    if (!isAuthenticated || !user) {
+      showMessage('Você precisa estar logado para adicionar itens a uma lista.', 'warning');
+      // Guarda a intenção de adicionar e redireciona
+      // (Você pode implementar uma lógica mais avançada de 'redirect' aqui se quiser)
+      navigate('/login');
+      return;
+    }
+
     setSelectedMedia(media);
     setIsAddToListModalOpen(true);
     setLoadingLists(true);
     try {
-      const lists = await getUserLists({ user_id: FIXED_USER_ID });
+      const lists = await getUserLists({ user_id: user.id });
       setUserLists(lists || []);
     } catch {
       showMessage('Erro ao buscar suas listas', 'error');

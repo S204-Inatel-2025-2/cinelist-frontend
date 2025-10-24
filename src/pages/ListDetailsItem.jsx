@@ -1,3 +1,4 @@
+// src/pages/ListDetailsItem.jsx
 import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar } from 'lucide-react';
 import Message from '../components/Message';

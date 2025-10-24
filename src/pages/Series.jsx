@@ -1,7 +1,8 @@
 // src/pages/Series.jsx
 import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
-import { useSearchParams } from 'react-router-dom'; // Adicionado useSearchParams
+import { useSearchParams, useNavigate } from 'react-router-dom'; // Adicionado useSearchParams
 import { Tv } from 'lucide-react';
+import { useUser } from '../context/UserContext';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import SearchBar from '../components/SearchBar';
@@ -25,6 +26,8 @@ function Series() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const { message, type, showMessage } = useMessage();
+  const { user, isAuthenticated } = useUser();
+  const navigate = useNavigate();
 
   // Adicionado para controle da URL
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,7 +38,6 @@ function Series() {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [userLists, setUserLists] = useState([]);
   const [loadingLists, setLoadingLists] = useState(false);
-  const FIXED_USER_ID = 10;
 
   // Envolvido em useCallback
   const loadSeries = useCallback(async () => {
@@ -77,7 +79,7 @@ function Series() {
     } else {
       loadSeries();
     }
-  }, [urlQuery, loadSeries, fetchSeriesSearch]); // Dependências atualizadas
+  }, [urlQuery, loadSeries, fetchSeriesSearch]);
 
   // handleSearch agora APENAS atualiza a URL
   const handleSearch = (query) => {
@@ -90,6 +92,12 @@ function Series() {
 
   // --- Funções para controlar o modal ---
   const handleOpenAddToListModal = async (media) => {
+    if (!isAuthenticated || !user) {
+        showMessage('Você precisa estar logado para adicionar itens a uma lista.', 'warning');
+        navigate('/login');
+        return;
+    }
+
     setSelectedMedia(media);
     setIsAddToListModalOpen(true);
     setLoadingLists(true);
@@ -109,8 +117,13 @@ function Series() {
   };
 
   const handleSelectList = async (listId) => {
-    if (loadingLists) return;
-    if (!selectedMedia) return;
+    if (loadingLists || !selectedMedia) return;
+
+     if (!isAuthenticated || !user) {
+        showMessage('Sessão expirada. Faça login novamente.', 'warning');
+        navigate('/login');
+        return;
+    }
 
     setLoadingLists(true);
     

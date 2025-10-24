@@ -1,6 +1,6 @@
 // src/pages/Lists.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { List, Plus, Trash2, Eye } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import { useUser } from '../context/UserContext';
@@ -14,73 +14,90 @@ function Lists() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [newListDescription, setNewListDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // Para desabilitar botões
   const { message, type, showMessage } = useMessage();
-  const { user } = useUser(); // Mantido para uso futuro
+  const { user, isAuthenticated } = useUser(); // Pega o usuário e estado de auth
   const navigate = useNavigate();
 
-  const FIXED_USER_ID = 10;
-
-  useEffect(() => {
-    if (user) {
-      loadLists();
+  const loadLists = useCallback(async () => {
+    if (!isAuthenticated || !user) {
+      // Se não estiver logado ao tentar carregar, redireciona
+      showMessage('Você precisa estar logado para ver suas listas.', 'warning');
+      navigate('/login');
+      return;
     }
-  }, [user]);
-
-  const loadLists = async () => {
     setLoading(true);
     try {
-      // Usando o ID fixo para buscar as listas
-      const data = await getUserLists({ user_id: FIXED_USER_ID });
+      // --- CORRIGIDO: usa user.id ---
+      const data = await getUserLists({ user_id: user.id });
       setLists(data || []);
     } catch (error) {
       showMessage('Erro ao carregar listas', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, isAuthenticated, showMessage, navigate]);
+
+  useEffect(() => {
+    loadLists();
+  }, [loadLists]);
 
   const handleCreateList = async (e) => {
     e.preventDefault();
+    if (!isAuthenticated || !user) {
+      showMessage('Você precisa estar logado para criar uma lista.', 'warning');
+      navigate('/login');
+      return;
+    }
     if (!newListName.trim()) {
       return showMessage('Digite um nome para a lista', 'error');
     }
+    if (isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       const payload = {
         nome: newListName.trim(),
         description: newListDescription.trim() || null,
-        user_id: FIXED_USER_ID,
+        user_id: user.id,
       };
-
       await createList(payload);
-      
       showMessage('Lista criada com sucesso!', 'success');
       setNewListName('');
       setNewListDescription('');
       setShowCreateModal(false);
-      loadLists();
+      loadLists(); // Recarrega as listas
     } catch (error) {
       showMessage('Erro ao criar lista', 'error');
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
   const handleDeleteList = async (listId) => {
-    if (!user) {
-      showMessage('Você precisa estar logado para excluir uma lista.', 'error');
+    if (!isAuthenticated || !user) {
+      showMessage('Você precisa estar logado para excluir uma lista.', 'warning');
+      navigate('/login');
       return;
     }
+    if (isSubmitting) return;
 
-    if (!confirm('Tem certeza que deseja excluir esta lista?')) return;
+    // Usar modal customizado
+    if (!window.confirm('Tem certeza que deseja excluir esta lista e todos os seus itens?')) return;
 
+    setIsSubmitting(true); // Bloqueia múltiplas exclusões
     try {
       await deleteList({
         lista_id: listId,
-        user_id: FIXED_USER_ID, // Usando o ID fixo
+        // --- CORRIGIDO: usa user.id ---
+        user_id: user.id,
       });
       showMessage('Lista excluída com sucesso!', 'success');
-      loadLists();
+      loadLists(); // Recarrega
     } catch (error) {
       showMessage('Erro ao excluir lista', 'error');
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -95,6 +112,21 @@ function Lists() {
       </div>
     );
   }
+
+  // Se não estiver autenticado após o carregamento, pode mostrar uma mensagem ou já ter redirecionado
+  if (!isAuthenticated) {
+     return (
+       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+         <div className="text-center">
+            <h2 className="text-xl font-semibold mb-4">Acesso Negado</h2>
+            <p className="text-slate-600 mb-6">Por favor, faça login para ver suas listas.</p>
+            <button onClick={() => navigate('/login')} className="px-6 py-2 bg-blue-600 text-white rounded-lg">
+                Ir para Login
+            </button>
+         </div>
+       </div>
+     );
+   }
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -170,6 +202,7 @@ function Lists() {
                         onClick={() => handleDeleteList(list.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
                         title="Excluir Lista"
+                        disabled={isSubmitting} // Desabilita enquanto outra exclusão está em progresso
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -197,6 +230,7 @@ function Lists() {
                   onChange={(e) => setNewListName(e.target.value)}
                   placeholder="Ex: Filmes Favoritos"
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -210,10 +244,11 @@ function Lists() {
                   placeholder="Adicione uma descrição..."
                   rows="3"
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                   disabled={isSubmitting}
                 />
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -222,14 +257,16 @@ function Lists() {
                     setNewListDescription('');
                   }}
                   className="flex-1 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium"
+                   disabled={isSubmitting}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                  disabled={isSubmitting}
                 >
-                  Criar Lista
+                  {isSubmitting ? 'Criando...' : 'Criar Lista'}
                 </button>
               </div>
             </form>

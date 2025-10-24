@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+// src/pages/ListDetails.jsx
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom'; // Adicionado useSearchParams
+import { useUser } from '../context/UserContext';
 import { List, ArrowLeft } from 'lucide-react';
 import { getList, deleteListItem } from '../services/lists';
 import { useMessage } from '../hooks/useMessage';
@@ -13,7 +15,8 @@ function ListDetails() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { id } = useParams();
   const { message, type, showMessage } = useMessage();
-  const FIXED_USER_ID = 10;
+  const { user, isAuthenticated } = useUser();
+  const navigate = useNavigate();
 
   // Função para padronizar os dados dos itens da lista
   const normalizeItemData = (item) => {
@@ -38,56 +41,67 @@ function ListDetails() {
   };
 
   // Função para buscar os detalhes da lista
-  const fetchListDetails = async () => {
+  const fetchListDetails = useCallback(async () => {
+    // Adicionado check inicial - se não estiver logado, não busca
+    if (!isAuthenticated) {
+      showMessage('Você precisa estar logado para ver os detalhes da lista.', 'warning');
+      navigate('/login');
+      return;
+    }
+    setLoading(true); // Garante que o loading comece aqui
     try {
       const data = await getList({ lista_id: parseInt(id) });
+      // TODO: Idealmente, o backend deveria validar se a lista pertence ao usuário logado
       setListData(data);
     } catch (error) {
-      showMessage('Erro ao carregar detalhes da lista.', 'error');
-      setListData(null);
+      if (error.response?.status === 404) {
+         showMessage('Lista não encontrada ou você não tem permissão para vê-la.', 'error');
+      } else {
+        showMessage('Erro ao carregar detalhes da lista.', 'error');
+      }
+      setListData(null); // Define como null em caso de erro
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, isAuthenticated, showMessage, navigate]);
 
   // Efeito para buscar os dados quando o ID da URL mudar
   useEffect(() => {
-    setLoading(true);
     fetchListDetails();
-  }, [id]);
+  }, [fetchListDetails]);
 
   // Função para lidar com a remoção de um item da lista
   const handleRemoveItem = async (media) => {
-    // Se já estiver enviando, ignora cliques adicionais
-    if (isSubmitting) return; 
+    if (!isAuthenticated || !user) {
+      showMessage('Você precisa estar logado para remover itens.', 'warning');
+      navigate('/login');
+      return;
+    }
+    if (isSubmitting) return;
 
-    if (!confirm(`Tem certeza que deseja remover "${media.title || media.name}" da lista?`)) {
+    // Usar modal customizado em vez de confirm
+    if (!window.confirm(`Tem certeza que deseja remover "${media.title || media.name}" da lista?`)) {
       return;
     }
 
-    // Ativa a trava
     setIsSubmitting(true);
-
     try {
       const payload = {
-        user_id: FIXED_USER_ID,
+        user_id: user.id,
         lista_id: parseInt(id),
         media_id: media.id,
-        media_type: media.type, 
+        media_type: media.type,
       };
       await deleteListItem(payload);
       showMessage('Item removido com sucesso!', 'success');
-      
-      // Espera a lista ser recarregada antes de liberar a trava
-      await fetchListDetails(); 
-    
+      await fetchListDetails(); // Recarrega os dados
+
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao remover item.';
       showMessage(errorMessage, 'error');
-    
+
     } finally {
-      // Libera a trava em qualquer caso (sucesso ou erro)
-      setIsSubmitting(false); 
+      setIsSubmitting(false);
     }
   };
 
@@ -136,17 +150,16 @@ function ListDetails() {
         <h2 className="text-2xl font-bold text-slate-900 mb-6">
           {listData.item_count} {listData.item_count === 1 ? 'Item na Lista' : 'Itens na Lista'}
         </h2>
-        
+
         {listData.itens.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
             {listData.itens.map((item) => (
-              <MediaCard 
+              <MediaCard
                 key={`${item.media_type}-${item.id}`}
-                // Normaliza os dados antes de passar para o card
-                media={normalizeItemData(item)} 
+                media={normalizeItemData(item)}
                 onRemoveFromList={handleRemoveItem}
                 listId={id}
-                isSubmitting={isSubmitting}
+                isSubmitting={isSubmitting} // Passa o estado de submissão para desabilitar o botão
               />
             ))}
           </div>

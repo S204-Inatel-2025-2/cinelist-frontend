@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Clock } from 'lucide-react';
+import { useUser } from '../context/UserContext';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import { rateMedia } from '../services/media';
@@ -12,6 +13,7 @@ function MediaDetails() {
   const { id } = useParams();
   const media = location.state?.media;
   const { message, type, showMessage } = useMessage();
+  const { user, isAuthenticated } = useUser();
 
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
@@ -54,6 +56,12 @@ function MediaDetails() {
   const handleSubmitRating = async (e) => {
     e.preventDefault();
 
+    if (!isAuthenticated || !user) {
+        showMessage('Você precisa estar logado para avaliar.', 'warning');
+        navigate('/login');
+        return;
+    }
+
     if (rating === '' || rating < 0 || rating > 10) {
       return showMessage('Por favor, selecione uma nota entre 0 e 10', 'error');
     }
@@ -65,14 +73,12 @@ function MediaDetails() {
         media_id: media.id,
         rating: parseFloat(rating),
         comment: review.trim(),
-        user_id: 10,
+        user_id: user.id,
       };
 
       await rateMedia(payload);
 
       showMessage('Avaliação enviada com sucesso!', 'success');
-      setRating(5);
-      setReview('');
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Erro ao enviar avaliação. Tente novamente.';
       showMessage(errorMessage, 'error');
@@ -86,12 +92,12 @@ function MediaDetails() {
   const posterUrl = getImageUrl(media.poster_path, 'w500');
 
   let year = null;
-  const dateString = media.release_date || media.first_air_date;
-  if (dateString && dateString.length >= 4) {
-    year = dateString.substring(0, 4);
-  } else if (media.startDate?.year) { // Fallback para animes (estrutura AniList)
-    year = media.startDate.year;
-  }
+  const dateString = media.release_date || media.first_air_date;
+  if (dateString && dateString.length >= 4) {
+    year = dateString.substring(0, 4);
+  } else if (media.startDate?.year) { // Fallback para animes (estrutura AniList)
+    year = media.startDate.year;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -114,34 +120,32 @@ function MediaDetails() {
             className="w-full h-full object-cover opacity-40"
           />
         )}
-        {/* Gradiente para fundir o fundo com o conteúdo principal */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/70 to-transparent" />
       </div>
 
-      {/* Conteúdo Principal - Aplicando o container de 1600px */}
+      {/* Conteúdo Principal */}
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12 -mt-32 relative z-10 pb-16">
         <main className="bg-white rounded-2xl shadow-xl p-8 lg:p-12">
-          {/* ALTERADO: Ajuste no gap para acomodar o pôster maior */}
           <div className="flex flex-col md:flex-row gap-12 lg:gap-20">
             {posterUrl && (
               <img
                 src={posterUrl}
                 alt={getMediaTitle(media)}
-                className="w-96 h-auto object-contain rounded-xl shadow-lg mx-auto md:mx-0 flex-shrink-0"
+                className="w-full md:w-96 h-auto object-contain rounded-xl shadow-lg mx-auto md:mx-0 flex-shrink-0"
               />
             )}
 
             <div className="flex-1 pt-4 md:pt-0">
               {/* Metadados */}
-              <div className="flex items-center space-x-4 text-slate-600 text-sm mb-4">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-600 text-sm mb-4">
                 <span className="flex items-center space-x-1">
                   <Star className="w-4 h-4 text-yellow-500" />
                   <span>{media.vote_average ? media.vote_average.toFixed(1) : 'N/A'}</span>
                 </span>
-                {(media.release_date || media.first_air_date) && (
+                {year && (
                   <span className="flex items-center space-x-1">
                     <Calendar className="w-4 h-4" />
-                    <span>{new Date(media.release_date || media.first_air_date).getFullYear()}</span>
+                    <span>{year}</span>
                   </span>
                 )}
                 {media.runtime && media.type === 'movie' && (
@@ -152,7 +156,7 @@ function MediaDetails() {
                 )}
               </div>
 
-              <h1 className="text-4xl font-extrabold text-slate-900 mb-4">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">
                 {getMediaTitle(media)}
               </h1>
 

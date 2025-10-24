@@ -1,6 +1,7 @@
 // src/pages/Anime.jsx
 import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
-import { useSearchParams } from 'react-router-dom'; // Adicionado useSearchParams
+import { useSearchParams, useNavigate } from 'react-router-dom'; // Adicionado useSearchParams
+import { useUser } from '../context/UserContext';
 import { Monitor } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
@@ -35,13 +36,14 @@ function Anime() {
   // Adicionado para controle da URL
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get('q');
+  const { user, isAuthenticated } = useUser();
+  const navigate = useNavigate();
 
   // --- States para o Modal "Adicionar à Lista" ---
   const [isAddToListModalOpen, setIsAddToListModalOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [userLists, setUserLists] = useState([]);
   const [loadingLists, setLoadingLists] = useState(false);
-  const FIXED_USER_ID = 10;
 
   // Envolvido em useCallback
   const loadAnime = useCallback(async () => {
@@ -94,11 +96,17 @@ function Anime() {
 
   // --- Funções para controlar o modal ---
   const handleOpenAddToListModal = async (media) => {
+    if (!isAuthenticated || !user) {
+        showMessage('Você precisa estar logado para adicionar itens a uma lista.', 'warning');
+        navigate('/login');
+        return;
+    }
+
     setSelectedMedia(media);
     setIsAddToListModalOpen(true);
     setLoadingLists(true);
     try {
-      const lists = await getUserLists({ user_id: FIXED_USER_ID });
+      const lists = await getUserLists({ user_id: user.id });
       setUserLists(lists || []);
     } catch (error) {
       showMessage('Erro ao buscar suas listas', 'error');
@@ -113,8 +121,13 @@ function Anime() {
   };
 
   const handleSelectList = async (listId) => {
-    if (loadingLists) return;
-    if (!selectedMedia) return;
+    if (loadingLists || !selectedMedia) return;
+    
+    if (!isAuthenticated || !user) {
+        showMessage('Sessão expirada. Faça login novamente.', 'warning');
+        navigate('/login');
+        return;
+    }
 
     setLoadingLists(true);
     
