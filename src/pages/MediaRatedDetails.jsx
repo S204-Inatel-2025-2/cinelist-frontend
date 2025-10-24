@@ -1,7 +1,7 @@
 // src/pages/MediaRatedDetails.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Star, Calendar, Clock } from 'lucide-react';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import { updateRating, deleteRating } from '../services/media';
@@ -97,6 +97,14 @@ function MediaRatedDetails() {
   const backdropUrl = getImageUrl(media.backdrop_path, 'original');
   const posterUrl = getImageUrl(media.poster_path, 'w500');
 
+  let year = null;
+  const dateString = media.release_date || media.first_air_date;
+  if (dateString && dateString.length >= 4) {
+    year = dateString.substring(0, 4);
+  } else if (media.startDate?.year) { // Fallback para animes (estrutura AniList)
+    year = media.startDate.year;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
@@ -136,11 +144,33 @@ function MediaRatedDetails() {
               />
             )}
             <div className="flex-1 pt-4 md:pt-0">
+              
+              {/* --- BLOCO DE METADADOS ADICIONADO --- */}
+              <div className="flex items-center space-x-4 text-slate-600 text-sm mb-4">
+                {/* A nota da API (media.vote_average) não é exibida aqui 
+                  pois o foco é a nota do usuário, que já está no formulário.
+                  Mas exibimos o ano e o runtime, se disponíveis.
+                */}
+                {year && (
+                  <span className="flex items-center space-x-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>{year}</span>
+                  </span>
+                )}
+                {media.runtime && media.type === 'movie' && (
+                  <span className="flex items-center space-x-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{media.runtime} min</span>
+                  </span>
+                )}
+              </div>
+              {/* --- FIM DO BLOCO --- */}
+
               <h1 className="text-4xl font-extrabold text-slate-900 mb-4">{getMediaTitle(media)}</h1>
 
               <h2 className="text-2xl font-bold text-slate-900 mb-3 mt-6">Sinopse</h2>
               <p className="text-lg text-slate-700 leading-relaxed mb-8">
-                {media.overview || 'Sem descrição disponível.'}
+                {media.overview || media.description || 'Sem descrição disponível.'}
               </p>
 
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">

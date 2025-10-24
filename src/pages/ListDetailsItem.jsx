@@ -25,6 +25,7 @@ function ListDetailsItem() {
   };
 
   if (!media) {
+    // ... (bloco 'if (!media)' sem alterações)
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
@@ -44,7 +45,18 @@ function ListDetailsItem() {
   const backdropPath = media.backdrop_path || media.bannerImage; 
   const backdropUrl = getImageUrl(backdropPath, 'original');
   const posterUrl = getImageUrl(media.poster_path, 'w500');
-  const releaseDate = media.release_date || (media.startDate ? `${media.startDate.year}` : null);
+
+  // --- LÓGICA DO ANO CORRIGIDA ---
+  // Esta lógica unificada funciona para filmes, séries e animes.
+  let year = null;
+  // 1. Checa por 'release_date' (filmes) OU 'first_air_date' (séries)
+  const dateString = media.release_date || media.first_air_date;
+  if (dateString && dateString.length >= 4) {
+    year = dateString.substring(0, 4);
+  } else if (media.startDate?.year) { // 2. Fallback para 'startDate' (animes)
+    year = media.startDate.year;
+  }
+  // --- FIM DA CORREÇÃO ---
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -74,7 +86,6 @@ function ListDetailsItem() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-50 to-transparent" />
       </div>
 
-      {/* ... (resto do seu componente, sem alterações) */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-48 relative z-10 pb-16">
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
           <div className="flex flex-col md:flex-row gap-8">
@@ -100,12 +111,16 @@ function ListDetailsItem() {
                     <span className="font-bold text-lg">{(media.vote_average).toFixed(1)}</span>
                   </div>
                 )}
-                {releaseDate && (
+                
+                {/* --- EXIBIÇÃO DO ANO CORRIGIDA --- */}
+                {/* Agora usa a variável 'year' */}
+                {year && (
                   <div className="flex items-center space-x-2">
                     <Calendar className="w-5 h-5 text-slate-500" />
-                    <span className="font-medium">{new Date(releaseDate).getFullYear()}</span>
+                    <span className="font-medium">{year}</span>
                   </div>
                 )}
+                {/* --- FIM DA CORREÇÃO --- */}
               </div>
 
               <p className="text-slate-700 leading-relaxed">

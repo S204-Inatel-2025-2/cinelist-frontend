@@ -78,6 +78,9 @@ function Profile() {
       poster_path: item.poster_path || item.image || null,
       backdrop_path: item.backdrop_path || null,
       comment: item.comment || null,
+      release_date: item.release_date || null,
+      first_air_date: item.first_air_date || null,
+      startDate: item.startDate || null,
     };
   };
 

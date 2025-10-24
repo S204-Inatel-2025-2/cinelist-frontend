@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Star } from 'lucide-react';
+import { Star, Calendar } from 'lucide-react';
 
 // Função para tratar URLs de imagem
 const getImageUrl = (path) => {
@@ -21,6 +21,15 @@ function MediaRatedCard({ media }) {
     : media.title || media.name;
 
   const imageUrl = getImageUrl(media.poster_path);
+
+  let year = null;
+  // Checa por 'release_date' (filmes, animes normalizados) ou 'first_air_date' (séries)
+  const dateString = media.release_date || media.first_air_date;
+  if (dateString && dateString.length >= 4) {
+    year = dateString.substring(0, 4);
+  } else if (media.startDate?.year) { // Fallback para animes (estrutura AniList)
+    year = media.startDate.year;
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group h-full flex flex-col">
@@ -44,9 +53,19 @@ function MediaRatedCard({ media }) {
           {title}
         </h3>
 
-        <span className="inline-block self-start px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full mb-2">
-          {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
-        </span>
+        <div className="flex items-center justify-between text-xs font-medium mb-2">
+          <span className="inline-block self-start px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+            {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
+          </span>
+          
+          {/* Exibe o ano se ele existir */}
+          {year && (
+            <div className="flex items-center space-x-1 text-slate-500">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{year}</span>
+            </div>
+          )}
+        </div>
 
         {/* Mostra a nota que o USUÁRIO deu */}
         {(media.vote_average != null) && (

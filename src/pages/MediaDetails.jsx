@@ -85,6 +85,14 @@ function MediaDetails() {
   const backdropUrl = getImageUrl(media.backdrop_path, 'original');
   const posterUrl = getImageUrl(media.poster_path, 'w500');
 
+  let year = null;
+  const dateString = media.release_date || media.first_air_date;
+  if (dateString && dateString.length >= 4) {
+    year = dateString.substring(0, 4);
+  } else if (media.startDate?.year) { // Fallback para animes (estrutura AniList)
+    year = media.startDate.year;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
