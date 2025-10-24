@@ -55,16 +55,16 @@ function MediaRatedCard({ media }) {
 
         <div className="flex items-center justify-between text-xs font-medium mb-2">
           <span className="inline-block self-start px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-            {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
-          </span>
+            {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
+          </span>
           
           {/* Exibe o ano se ele existir */}
-          {year && (
-            <div className="flex items-center space-x-1 text-slate-500">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{year}</span>
-            </div>
-          )}
+          {year && (
+            <div className="flex items-center space-x-1 text-slate-500">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{year}</span>
+            </div>
+          )}
         </div>
 
         {/* Mostra a nota que o USUÁRIO deu */}

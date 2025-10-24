@@ -1,35 +1,45 @@
 // src/pages/Register.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Film, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { Film, Mail, Lock, User as UserIcon, Loader2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
+import { registerUser } from '../services/auth'; // Importa o serviço real
 
 function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUser } = useUser();
+  const [loading, setLoading] = useState(false); // Estado de carregamento
+  const { setUser } = useUser(); // 'setUser' agora é nossa função 'login'
   const navigate = useNavigate();
   const { message, type, showMessage } = useMessage();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-
     if (!name.trim() || !email.trim() || !password.trim()) {
       return showMessage('Preencha todos os campos!', 'error');
     }
 
-    setUser({
-      name,
-      email,
-      avatar: 'https://www.w3schools.com/howto/img_avatar.png',
-    });
+    setLoading(true);
+    try {
+      // Chama a API real
+      const data = await registerUser(name, email, password);
 
-    localStorage.setItem('token', 'demo-token');
-    showMessage('Cadastro realizado com sucesso!', 'success');
-    setTimeout(() => navigate('/home'), 1000);
+      // 'data' deve conter { user, access_token }
+      setUser(data.user, data.access_token); // Usa a função login do contexto
+
+      showMessage('Cadastro realizado com sucesso!', 'success');
+      setTimeout(() => navigate('/home'), 1000);
+
+    } catch (error) {
+      // Exibe o erro vindo do backend
+      const errorMessage = error.response?.data?.detail || 'Erro ao cadastrar. Tente novamente.';
+      showMessage(errorMessage, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,6 +54,7 @@ function Register() {
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
+          {/* ... (Inputs de Nome e Email - sem alterações) ... */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Nome
@@ -55,7 +66,8 @@ function Register() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Seu nome"
-                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50"
               />
             </div>
           </div>
@@ -71,7 +83,8 @@ function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50"
               />
             </div>
           </div>
@@ -87,16 +100,23 @@ function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50"
               />
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            disabled={loading} // Desabilita o botão durante o carregamento
+            className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl
+                       disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cadastrar
+            {loading ? (
+              <Loader2 className="w-5 h-5 mx-auto animate-spin" />
+            ) : (
+              'Cadastrar'
+            )}
           </button>
         </form>
 
