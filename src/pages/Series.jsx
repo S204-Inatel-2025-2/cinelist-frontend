@@ -102,7 +102,7 @@ function Series() {
     setIsAddToListModalOpen(true);
     setLoadingLists(true);
     try {
-      const lists = await getUserLists({ user_id: FIXED_USER_ID });
+      const lists = await getUserLists({ user_id: user.id });
       setUserLists(lists || []);
     } catch (error) {
       showMessage('Erro ao buscar suas listas', 'error');

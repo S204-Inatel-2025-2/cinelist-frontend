@@ -17,6 +17,7 @@ export const registerUser = async (name, email, password) => {
 
 /**
  * Loga um usuário.
+ * * @param {object} data
  * O backend deve retornar: { user: { id, name, email, ... }, access_token: "..." }
  */
 export const loginUser = async (email, password) => {
@@ -41,5 +42,16 @@ export const validateToken = async () => {
   } catch (error) {
     console.error("Erro ao validar token:", error.response?.data);
     throw error;
+  }
+};
+
+export const updateUserAvatar = async (data) => {
+  try {
+    // A rota no backend é '/auth/me/avatar' (prefixo '/auth' + rota '/me/avatar')
+    const response = await api.put('/auth/me/avatar', data);
+    return response.data; // Retorna o UserOut atualizado
+  } catch (error) {
+    console.error('Erro ao atualizar avatar:', error.response?.data || error.message);
+    throw error.response?.data || new Error('Falha ao atualizar avatar');
   }
 };

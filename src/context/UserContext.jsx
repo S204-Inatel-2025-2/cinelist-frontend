@@ -56,6 +56,7 @@ export const UserProvider = ({ children }) => {
     logout,
     loading,
     isAuthenticated: !!user, // Um booleano útil
+    updateUser: setUser,
   };
 
   // Não renderiza nada até que a verificação inicial do token termine

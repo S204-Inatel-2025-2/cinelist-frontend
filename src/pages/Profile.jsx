@@ -9,14 +9,19 @@ import MediaRatedCard from '../components/MediaRatedCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
+import AvatarModal from '../components/AvatarModal';
+import { getAvatarPath, DEFAULT_AVATAR_ID } from '../config/avatars';
+import { updateUserAvatar } from '../services/auth';
 
 function Profile() {
-  const { user, isAuthenticated, logout } = useUser();
+  const { user, isAuthenticated, updateUser } = useUser();
   const navigate = useNavigate();
   const [ratings, setRatings] = useState([]);
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const { message, type, showMessage } = useMessage();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Busca todos os dados do perfil (avaliações e listas) de uma só vez
   const fetchProfileData = useCallback(async () => {
@@ -26,6 +31,7 @@ function Profile() {
       navigate('/login');
       return;
     }
+    console.log("Iniciando fetch com user.id:", user.id);
     setLoading(true);
     try {
       const [ratingsResponse, listsResponse] = await Promise.all([
@@ -97,6 +103,32 @@ function Profile() {
     };
   };
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSaveAvatar = async (newAvatarId) => {
+    if (!user || !updateUser) {
+      showMessage('Erro ao encontrar dados do usuário.', 'error');
+      return;
+    }
+
+    try {
+      const updatedUserFromApi = await updateUserAvatar({ avatar: newAvatarId });
+      updateUser(updatedUserFromApi);
+
+      showMessage('Avatar atualizado com sucesso!', 'success');
+      handleCloseModal(); // Fecha o modal
+    } catch (error) {
+      showMessage('Erro ao salvar o novo avatar.', 'error');
+      console.error("Falha ao salvar avatar:", error);
+    }
+  };
+
   if (loading || !user) {
       return (
           <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -114,12 +146,13 @@ function Profile() {
         <div className="max-w-[1600px] mx-auto px-8 lg:px-12">
           <div className="flex flex-col items-center text-center">
             <img
-              // Usa user.avatar se existir, senão fallback
-              src={user?.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
-              // Usa user.username (do backend) ou user.name (se definido no login/registro)
+              src={getAvatarPath(user?.avatar)}
               alt={user?.username || user?.name || `Usuário #${user?.id}`}
-              className="w-32 h-32 rounded-full border-4 border-white shadow-xl mb-4 bg-slate-600" // Add bg color for placeholder
-              onError={(e) => { e.target.src = 'https://www.w3schools.com/howto/img_avatar.png'; }} // Fallback if image fails
+              className="w-32 h-32 rounded-full border-4 border-white shadow-xl mb-4 bg-slate-600 cursor-pointer transition-transform hover:scale-105"
+              onClick={handleOpenModal} 
+              // Fallback em caso de erro usa a função também
+              onError={(e) => { e.target.src = getAvatarPath(DEFAULT_AVATAR_ID); }}
+              title="Clique para alterar o ícone"
             />
             {/* Usa user.username ou user.name */}
             <h1 className="text-4xl font-bold mb-2">{user?.username || user?.name || `Usuário #${user?.id}`}</h1>
@@ -242,6 +275,13 @@ function Profile() {
           )}
         </div>
       </div>
+      {/* --- Renderizar o Modal --- */}
+      <AvatarModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveAvatar}
+        currentAvatarId={user?.avatar || DEFAULT_AVATAR_ID}
+      />
     </div>
   );
 }
