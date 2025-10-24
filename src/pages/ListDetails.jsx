@@ -1,5 +1,5 @@
 // src/pages/ListDetails.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback,useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom'; // Adicionado useSearchParams
 import { useUser } from '../context/UserContext';
 import { List, ArrowLeft } from 'lucide-react';
@@ -105,6 +105,24 @@ function ListDetails() {
     }
   };
 
+  const sortedAndNormalizedItems = useMemo(() => {
+    // Se não houver dados, retorna um array vazio
+    if (!listData || !listData.itens) {
+      return [];
+    }
+
+    // 1. Normaliza os dados de todos os itens
+    const normalized = listData.itens.map(normalizeItemData);
+
+    // 2. Ordena o array normalizado alfabeticamente pelo título
+    return normalized.sort((a, b) => {
+      const titleA = a.title || ''; // Garante que não é null/undefined
+      const titleB = b.title || ''; // Garante que não é null/undefined
+      return titleA.localeCompare(titleB); // Compara os títulos
+    });
+
+  }, [listData]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -153,13 +171,13 @@ function ListDetails() {
 
         {listData.itens.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-            {listData.itens.map((item) => (
+            {sortedAndNormalizedItems.map((item) => ( 
               <MediaCard
-                key={`${item.media_type}-${item.id}`}
-                media={normalizeItemData(item)}
+                key={`${item.type}-${item.id}`} // 'item.type' já está normalizado
+                media={item} // Passa o item já normalizado
                 onRemoveFromList={handleRemoveItem}
                 listId={id}
-                isSubmitting={isSubmitting} // Passa o estado de submissão para desabilitar o botão
+                isSubmitting={isSubmitting} 
               />
             ))}
           </div>
