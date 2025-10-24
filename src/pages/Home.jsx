@@ -136,6 +136,9 @@ function Home() {
         backdrop_path: selectedMedia.backdrop_path,
         overview: selectedMedia.overview,
         vote_average: selectedMedia.vote_average,
+        release_date: selectedMedia.release_date || null,
+        first_air_date: selectedMedia.first_air_date || null,
+        startDate: selectedMedia.startDate || null,
       };
       await addItemToList(payload);
       showMessage(`"${selectedMedia.title || selectedMedia.name}" adicionado à lista!`, 'success');
