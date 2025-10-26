@@ -1,3 +1,4 @@
+// src/config/avatars.js
 export const AVATAR_MAP = {
   // O ID 'default' será o nosso fallback
   'default': '/avatars/img_avatar.png', 

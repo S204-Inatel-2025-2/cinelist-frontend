@@ -16,6 +16,7 @@ import Lists from './pages/Lists';
 import ListDetails from './pages/ListDetails';
 import ListDetailsItem from './pages/ListDetailsItem';
 import Profile from './pages/Profile';
+import UsersProfile from './pages/UsersProfile';
 
 function PrivateRoute({ children }) {
   const { user } = useUser();
@@ -132,6 +133,14 @@ function AppContent() {
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <PrivateRoute>
+                <UsersProfile />
               </PrivateRoute>
             }
           />

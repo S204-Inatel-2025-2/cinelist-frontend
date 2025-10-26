@@ -1,6 +1,6 @@
+// src/context/UserContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import { validateToken } from '../services/auth';
-import api from '../services/api'; // Importa a api para setar o header padrão
 
 // 1. Cria o Contexto
 const UserContext = createContext(null);
@@ -16,9 +16,6 @@ export const UserProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          // Define o token no header da api para a chamada de validação
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          // Valida o token com o backend
           const data = await validateToken();
           setUser(data.user); // Armazena os dados do usuário
         } catch (error) {
@@ -36,17 +33,13 @@ export const UserProvider = ({ children }) => {
   // 4. Função de Login (substitui o 'setUser' direto)
   const login = (userData, token) => {
     localStorage.setItem('token', token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
   };
 
   // 5. Função de Logout
   const logout = () => {
     localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
     setUser(null);
-    // Opcional: redirecionar para o login
-    // window.location.href = '/login';
   };
 
   // 6. Valor fornecido pelo contexto

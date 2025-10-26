@@ -1,6 +1,6 @@
 // src/components/NavBar.jsx
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, Tv, Monitor, User, List, LogOut } from 'lucide-react';
+import { Film, Tv, Monitor, User, List, LogOut, Users } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
 function Navbar() {
@@ -41,6 +41,10 @@ function Navbar() {
             <Link to="/lists" className="hover:text-blue-400 transition-colors flex items-center space-x-1">
               <List className="w-5 h-5" />
               <span>Minhas Listas</span>
+            </Link>
+            <Link to="/users" className="hover:text-blue-400 transition-colors flex items-center space-x-1">
+              <Users className="w-5 h-5" />
+              <span>Usuários</span>
             </Link>
           </div>
 
