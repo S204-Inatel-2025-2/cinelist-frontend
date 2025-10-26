@@ -17,6 +17,10 @@ import ListDetails from './pages/ListDetails';
 import ListDetailsItem from './pages/ListDetailsItem';
 import Profile from './pages/Profile';
 import UsersProfile from './pages/UsersProfile';
+import AnotherUser from './pages/AnotherUser';
+import AnotherRatedDetails from './pages/AnotherRatedDetails';
+import AnotherUserListDetails from './pages/AnotherUserListDetails';
+import AnotherUserListDetailsItem from './pages/AnotherUserListDetailsItem';
 
 function PrivateRoute({ children }) {
   const { user } = useUser();
@@ -94,13 +98,20 @@ function AppContent() {
               </PrivateRoute>
             }
           />
-          {/* 2. ADICIONE A NOVA ROTA AQUI */}
           {/* Rota para ver/editar uma AVALIAÇÃO (acessada pelo Perfil) */}
           <Route
             path="/rated/:type/:id"
             element={
               <PrivateRoute>
                 <MediaRatedDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/user-rated/:type/:id"
+            element={
+              <PrivateRoute>
+                <AnotherRatedDetails />
               </PrivateRoute>
             }
           />
@@ -129,6 +140,22 @@ function AppContent() {
             }
           />
           <Route
+          path="/user-lists/:id"
+          element={
+            <PrivateRoute>
+              <AnotherUserListDetails />
+            </PrivateRoute>
+          }
+        />
+         <Route
+          path="/user-lists/:listId/item/:id"
+          element={
+            <PrivateRoute>
+              <AnotherUserListDetailsItem />
+            </PrivateRoute>
+          }
+        />
+          <Route
             path="/profile"
             element={
               <PrivateRoute>
@@ -136,6 +163,14 @@ function AppContent() {
               </PrivateRoute>
             }
           />
+          <Route
+          path="/users/:id"
+          element={
+            <PrivateRoute>
+              <AnotherUser />
+            </PrivateRoute>
+          }
+        />
           <Route
             path="/users"
             element={

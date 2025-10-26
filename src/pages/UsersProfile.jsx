@@ -16,39 +16,34 @@ function UsersProfile() {
   const { message, type, showMessage } = useMessage();
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      
-      if (isAuthenticated === null) {
-        setLoading(true); 
-        return;
-      }
+    const fetchUsers = async () => {
+ 
+      if (isAuthenticated === null) {
+        setLoading(true); 
+        return;
+      }
 
-      if (isAuthenticated === false) {
-        setLoading(false); 
-        showMessage('Você precisa estar logado para ver os usuários.', 'warning');
-        return;
-      }
+      if (isAuthenticated === false) {
+        setLoading(false); 
+        showMessage('Você precisa estar logado para ver os usuários.', 'warning');
+        return;
+      }
 
-      // 2. Simplifique esta lógica. Se está autenticado, busque os dados.
-      if (isAuthenticated === true) { 
-        setLoading(true); 
-        try {
-          // 3. Chame a função sem o 'token'.
-          const data = await getAllUsers(); 
-          setOtherUsers(data);
-        } catch (error) {
-          showMessage(error.detail || 'Erro ao carregar a lista de usuários.', 'error');
-        } finally {
-          setLoading(false); 
-        }
-      } 
-      
-      // 4. Remova este bloco 'else if', que era a causa do bug.
-      // --- FIM DA CORREÇÃO ---
-    };
+      if (isAuthenticated === true) { 
+        setLoading(true); 
+        try {
+          const data = await getAllUsers(); 
+          setOtherUsers(data);
+        } catch (error) {
+          showMessage(error.detail || 'Erro ao carregar a lista de usuários.', 'error');
+        } finally {
+          setLoading(false); 
+        }
+      } 
+    };
 
-    fetchUsers();
-  }, [isAuthenticated, showMessage]);
+    fetchUsers();
+  }, [isAuthenticated, showMessage]);
 
   // Renderização do conteúdo principal
   const renderContent = () => {

@@ -1,39 +1,39 @@
-// src/components/MediaRatedCard.jsx
+// src/components/AnotherRatedCard.jsx
 import { useNavigate } from 'react-router-dom';
 import { Star, Calendar } from 'lucide-react';
 
-// Função para tratar URLs de imagem
+// Função para tratar URLs de imagem (pode ser movida para um utils se usada em mais lugares)
 const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   return `https://image.tmdb.org/t/p/w500${path}`;
 };
 
-function MediaRatedCard({ media }) {
+function AnotherUserRatedCard({ media }) { // Renomeado
   const navigate = useNavigate();
 
-  // MODIFICAÇÃO: A rota agora inclui o TIPO e o ID da mídia
+  // NAVEGA PARA A NOVA ROTA '/user-rated/...'
   const handleClick = () => {
-    navigate(`/rated/${media.type}/${media.id}`, { state: { media } });
+    navigate(`/user-rated/${media.type}/${media.id}`, { state: { media } });
   };
-  
-  const title = typeof media.title === 'object' 
-    ? media.title.romaji || media.title.english || 'Sem título' 
+
+  const title = typeof media.title === 'object'
+    ? media.title.romaji || media.title.english || 'Sem título'
     : media.title || media.name;
 
   const imageUrl = getImageUrl(media.poster_path);
 
   let year = null;
-  // Checa por 'release_date' (filmes, animes normalizados) ou 'first_air_date' (séries)
   const dateString = media.release_date || media.first_air_date;
   if (dateString && dateString.length >= 4) {
     year = dateString.substring(0, 4);
-  } else if (media.startDate?.year) { // Fallback para animes (estrutura AniList)
+  } else if (media.startDate?.year) {
     year = media.startDate.year;
   }
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group h-full flex flex-col">
+      {/* Imagem (igual ao MediaRatedCard) */}
       <div className="relative h-64 bg-slate-800 cursor-pointer" onClick={handleClick}>
         {imageUrl ? (
           <img
@@ -49,17 +49,17 @@ function MediaRatedCard({ media }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
+      {/* Conteúdo do Card */}
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="font-bold text-lg mb-2 line-clamp-1 text-slate-900">
           {title}
         </h3>
 
+        {/* Tipo e Ano (igual ao MediaRatedCard) */}
         <div className="flex items-center justify-between text-xs font-medium mb-2">
           <span className="inline-block self-start px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
             {media.type === 'movie' ? 'Filme' : media.type === 'serie' || media.type === 'tv' ? 'Série' : 'Anime'}
           </span>
-          
-          {/* Exibe o ano se ele existir */}
           {year && (
             <div className="flex items-center space-x-1 text-slate-500">
               <Calendar className="w-3.5 h-3.5" />
@@ -68,27 +68,39 @@ function MediaRatedCard({ media }) {
           )}
         </div>
 
-        {/* Mostra a nota que o USUÁRIO deu */}
+        {/* Mostra a nota */}
         {(media.vote_average != null) && (
           <div className="flex items-center space-x-1 mb-3">
             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
             <span className="text-sm font-medium text-slate-700">
-              Sua nota: {media.vote_average.toFixed(1)}
+              {/* TEXTO ALTERADO */}
+              Nota do usuário: {media.vote_average.toFixed(1)}
             </span>
           </div>
         )}
 
-        {/* Mostra o COMENTÁRIO */}
+        {/* Mostra o Comentário (igual ao MediaRatedCard) */}
         {media.comment ? (
           <blockquote className="mb-4 flex-grow border-l-4 border-slate-300 py-1 pl-3 text-sm italic text-slate-700 line-clamp-3">
             "{media.comment}"
           </blockquote>
         ) : (
-          <p className="mb-4 flex-grow text-sm italic text-slate-500">
-            Nenhum comentário adicionado.
-          </p>
+           // Mostra "nenhum comentário" apenas se houver uma nota
+           media.vote_average != null && (
+            <p className="mb-4 flex-grow text-sm italic text-slate-500">
+                Nenhum comentário adicionado.
+            </p>
+           )
         )}
+         {/* Mostra se não houver avaliação */}
+         {media.vote_average == null && (
+            <p className="mb-4 flex-grow text-sm italic text-slate-500">
+                Sem avaliação.
+            </p>
+         )}
 
+
+        {/* Botão Ver Detalhes (igual ao MediaRatedCard, mas chama o handleClick modificado) */}
         <div className="mt-auto">
           <button
             onClick={handleClick}
@@ -102,4 +114,4 @@ function MediaRatedCard({ media }) {
   );
 }
 
-export default MediaRatedCard;
+export default AnotherUserRatedCard;
