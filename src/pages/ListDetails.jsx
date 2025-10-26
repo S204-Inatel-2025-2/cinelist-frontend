@@ -1,13 +1,26 @@
 // src/pages/ListDetails.jsx
 import { useState, useEffect, useCallback,useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom'; // Adicionado useSearchParams
+import { useParams, useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom'; // Adicionado useSearchParams
 import { useUser } from '../context/UserContext';
-import { List, ArrowLeft } from 'lucide-react';
+import { List, ArrowLeft, Film, Tv, Monitor } from 'lucide-react';
 import { getList, deleteListItem } from '../services/lists';
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MediaCard from '../components/MediaCard';
+
+// Objeto para ajudar a renderizar os botões e os nomes
+const filterOptions = {
+  'all': { label: 'Todos', icon: List },
+  'movie': { label: 'Filmes', icon: Film },
+  'serie': { label: 'Séries', icon: Tv },
+  'anime': { label: 'Animes', icon: Monitor },
+};
+
+// Ordem dos botões
+const filterOrder = ['all', 'movie', 'serie', 'anime'];
+
+const isValidFilter = (filter) => filter && filterOptions[filter];
 
 function ListDetails() {
   const [listData, setListData] = useState(null);
@@ -17,27 +30,27 @@ function ListDetails() {
   const { message, type, showMessage } = useMessage();
   const { user, isAuthenticated } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Função para padronizar os dados dos itens da lista
-  const normalizeItemData = (item) => {
-    // Primeiro, padroniza a propriedade 'type'
-    const baseData = {
-      ...item,
-      type: item.media_type,
-    };
+  const initialFilter = searchParams.get('filter') || 'all';
+  const [activeFilter, setActiveFilter] = useState(
+    isValidFilter(initialFilter) ? initialFilter : 'all'
+  );
 
-    // Se for um anime, aplica a normalização específica
-    if (baseData.type === 'anime') {
-      return {
-        ...baseData, // Mantém o vote_average que já veio do backend
-        title: item.title?.romaji || item.title?.english || 'Sem título',
-        overview: item.description ? item.description.replace(/<[^>]*>/g, '') : 'Sem descrição.',
-        // As linhas de poster_path e backdrop_path também já foram removidas na etapa anterior
-        // A linha de vote_average foi REMOVIDA AGORA
-      };
+  const handleFilterChange = (newFilter) => {
+    if (isValidFilter(newFilter)) {
+      setActiveFilter(newFilter);
+      // Atualiza o parâmetro 'filter' na URL
+      setSearchParams({ filter: newFilter });
     }
-      // Para filmes e séries, apenas retorna com o 'type' ajustado
-    return baseData;
+  };
+
+  const normalizeItemData = (item) => {
+    return {
+      ...item,
+      type: item.type || item.media_type,
+    };
   };
 
   // Função para buscar os detalhes da lista
@@ -69,6 +82,13 @@ function ListDetails() {
   useEffect(() => {
     fetchListDetails();
   }, [fetchListDetails]);
+
+  useEffect(() => {
+     if (location.state?.previousFilter && isValidFilter(location.state.previousFilter)) {
+       handleFilterChange(location.state.previousFilter);
+       navigate(location.pathname, { replace: true, state: {} });
+     }
+   }, [location.state]);
 
   // Função para lidar com a remoção de um item da lista
   const handleRemoveItem = async (media) => {
@@ -122,6 +142,15 @@ function ListDetails() {
     });
 
   }, [listData]);
+  
+  const filteredItems = useMemo(() => {
+    // Se o filtro for 'all', retorna a lista inteira
+    if (activeFilter === 'all') {
+      return sortedAndNormalizedItems;
+    }
+    // Caso contrário, filtra pelo 'type'
+    return sortedAndNormalizedItems.filter(item => item.type === activeFilter);
+  }, [sortedAndNormalizedItems, activeFilter]);
 
   if (loading) {
     return (
@@ -144,10 +173,34 @@ function ListDetails() {
     );
   }
 
+  const renderFilterButtons = () => (
+    <div className="flex flex-wrap gap-3 mb-8">
+      {filterOrder.map((key) => {
+        const { label, icon: Icon } = filterOptions[key];
+        const isActive = activeFilter === key;
+        const baseClasses = "flex items-center justify-center space-x-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 border-2";
+        const activeClasses = "bg-slate-800 text-white border-slate-800 shadow-md";
+        const inactiveClasses = "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 hover:border-slate-400";
+        return (
+          <button
+            key={key}
+            className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
+            // --- 6. Usar handleFilterChange no onClick ---
+            onClick={() => handleFilterChange(key)}
+          >
+            <Icon className="w-4 h-4" />
+            <span>{label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
 
+      {/* --- (Banner do topo permanece igual) --- */}
       <div className="bg-gradient-to-r from-slate-700 to-slate-900 text-white py-12 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-8 lg:px-12">
           <Link to="/lists" className="mb-4 inline-flex items-center text-slate-300 hover:text-white transition-colors">
@@ -165,23 +218,51 @@ function ListDetails() {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-8 lg:px-12 py-12">
+        
+        {/* Usa filteredItems.length para o número e o texto */}
         <h2 className="text-2xl font-bold text-slate-900 mb-6">
-          {listData.item_count} {listData.item_count === 1 ? 'Item na Lista' : 'Itens na Lista'}
+          {filteredItems.length}
+          {' '}
+          {
+            activeFilter === 'movie' ? (filteredItems.length === 1 ? 'Filme na Lista' : 'Filmes na Lista') :
+            activeFilter === 'serie' ? (filteredItems.length === 1 ? 'Série na Lista' : 'Séries na Lista') :
+            activeFilter === 'anime' ? (filteredItems.length === 1 ? 'Anime na Lista' : 'Animes na Lista') :
+            (filteredItems.length === 1 ? 'Item na Lista' : 'Itens na Lista') // Padrão ('all')
+          }
         </h2>
 
         {listData.itens.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-            {sortedAndNormalizedItems.map((item) => ( 
-              <MediaCard
-                key={`${item.type}-${item.id}`} // 'item.type' já está normalizado
-                media={item} // Passa o item já normalizado
-                onRemoveFromList={handleRemoveItem}
-                listId={id}
-                isSubmitting={isSubmitting} 
-              />
-            ))}
-          </div>
+          <>
+            {/* --- Botões de filtro (sem alterações) --- */}
+            {renderFilterButtons()}
+
+            {/* --- Lógica de exibição da lista filtrada (sem alterações) --- */}
+            {filteredItems.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                {filteredItems.map((item) => ( 
+                  <MediaCard
+                    key={`${item.type}-${item.id}`} 
+                    media={item} 
+                    onRemoveFromList={handleRemoveItem}
+                    listId={id}
+                    isSubmitting={isSubmitting} 
+                  />
+                ))}
+              </div>
+            ) : (
+              // Mensagem caso o filtro não retorne nada
+              <div className="text-center py-16">
+                 <h3 className="text-xl font-bold text-slate-900 mb-2">
+                   Nenhum item encontrado
+                 </h3>
+                 <p className="text-slate-600">
+                   Não há mídias do tipo "{filterOptions[activeFilter].label}" nesta lista.
+                 </p>
+               </div>
+            )}
+          </>
         ) : (
+          // Mensagem original (se a lista estiver totalmente vazia)
           <div className="text-center py-16">
             <List className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-900 mb-2">

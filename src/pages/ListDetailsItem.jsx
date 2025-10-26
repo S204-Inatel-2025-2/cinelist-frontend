@@ -43,33 +43,39 @@ function ListDetailsItem() {
     );
   }
 
+  const handleGoBack = () => {
+    // Tenta voltar no histórico. Se não houver histórico (ex: abriu direto),
+    // vai para a lista sem filtro.
+    if (window.history.length > 1) {
+       navigate(-1);
+    } else {
+       navigate(`/lists/${listId}`); // Fallback
+    }
+  };
+
   const backdropPath = media.backdrop_path || media.bannerImage; 
   const backdropUrl = getImageUrl(backdropPath, 'original');
   const posterUrl = getImageUrl(media.poster_path, 'w500');
-
-  // --- LÓGICA DO ANO CORRIGIDA ---
-  // Esta lógica unificada funciona para filmes, séries e animes.
   let year = null;
-  // 1. Checa por 'release_date' (filmes) OU 'first_air_date' (séries)
   const dateString = media.release_date || media.first_air_date;
   if (dateString && dateString.length >= 4) {
     year = dateString.substring(0, 4);
-  } else if (media.startDate?.year) { // 2. Fallback para 'startDate' (animes)
+  } else if (media.startDate?.year) {
     year = media.startDate.year;
   }
-  // --- FIM DA CORREÇÃO ---
+
 
   return (
     <div className="min-h-screen bg-slate-50">
       <Message message={message} type={type} />
       
-      <Link
-        to={`/lists/${listId}`}
-        className="fixed top-20 left-4 z-20 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-white transition-all"
-        title="Voltar para a lista"
+      <button
+        onClick={handleGoBack}
+        className="fixed top-20 left-6 lg:left-12 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow" // Mudado de z-20 para z-50
+        title="Voltar"
       >
         <ArrowLeft className="w-6 h-6 text-slate-700" />
-      </Link>
+      </button>
 
       <div className="relative h-96 md:h-[500px] bg-gradient-to-br from-slate-900 to-slate-700">
         {backdropUrl ? (
