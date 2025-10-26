@@ -13,6 +13,16 @@ import AvatarModal from '../components/AvatarModal';
 import { getAvatarPath, DEFAULT_AVATAR_ID } from '../config/avatars';
 import { updateUserAvatar } from '../services/auth';
 
+const removeDuplicatesById = (mediaList) => {
+  if (!Array.isArray(mediaList)) return [];
+  const mediaMap = new Map();
+  mediaList.forEach(media => {
+    // Usa 'media.id' que, no caso dos ratings, é o ID da avaliação (ex: 8, 9, 10)
+    mediaMap.set(`${media.type}-${media.id}`, media);
+  });
+  return Array.from(mediaMap.values());
+};
+
 function Profile() {
   const { user, isAuthenticated, updateUser } = useUser();
   const navigate = useNavigate();
@@ -31,7 +41,6 @@ function Profile() {
       navigate('/login');
       return;
     }
-    console.log("Iniciando fetch com user.id:", user.id);
     setLoading(true);
     try {
       const [ratingsResponse, listsResponse] = await Promise.all([
@@ -39,7 +48,9 @@ function Profile() {
         getUserLists({ user_id: user.id }) // Passa o ID do usuário real
       ]);
 
-      setRatings(ratingsResponse.results || []);
+      const rawRatings = ratingsResponse.results || [];
+      const uniqueRatings = removeDuplicatesById(rawRatings);
+      setRatings(uniqueRatings);
       setLists(listsResponse || []);
     } catch (error) {
       showMessage('Erro ao carregar dados do perfil.', 'error');
@@ -93,7 +104,7 @@ function Profile() {
       type: item.type,
       title: item.title || item.name || 'Sem título',
       overview: (item.overview || item.description || '').replace(/<[^>]*>/g, '') || 'Sem descrição disponível.',
-      vote_average: item.rating ?? item.score ?? 0,
+      vote_average: item.rating ?? item.score ?? null,
       poster_path: item.poster_path || item.image || null,
       backdrop_path: item.backdrop_path || null,
       comment: item.comment || null,
@@ -207,7 +218,7 @@ function Profile() {
               {ratings.map((item) => (
                 <MediaRatedCard
                   // A chave precisa ser única, usa o ID interno do rating se disponível, senão combina tipo e media_id
-                  key={item.id || `${item.type}-${item.movie_id || item.serie_id || item.anime_id}`}
+                  key={`${item.type}-${item.id}`}
                   media={normalizeRatedData(item)}
                 />
               ))}
