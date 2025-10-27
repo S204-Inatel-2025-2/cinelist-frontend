@@ -1,7 +1,7 @@
 // src/pages/Profile.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Star, List, Eye, Trash2, AlertTriangle } from 'lucide-react';
+import { User, Mail, Calendar, Star, List, Eye, Trash2, AlertTriangle, Pencil } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getUserRatings } from '../services/media';
 import { getUserLists, deleteList } from '../services/lists';
@@ -11,7 +11,7 @@ import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import AvatarModal from '../components/AvatarModal';
 import { getAvatarPath, DEFAULT_AVATAR_ID } from '../config/avatars';
-import { updateUserAvatar, deleteAccount } from '../services/auth';
+import { updateUserAvatar, deleteAccount, updateUsername } from '../services/auth';
 
 const removeDuplicatesById = (mediaList) => {
   if (!Array.isArray(mediaList)) return [];
@@ -31,6 +31,9 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const { message, type, showMessage } = useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNameEditing, setIsNameEditing] = useState(false);
+  const [newUsername, setNewUsername] = useState(user?.username || '');
+  const [isSavingName, setIsSavingName] = useState(false);
 
   // Busca todos os dados do perfil (avaliações e listas) de uma só vez
   const fetchProfileData = useCallback(async () => {
@@ -61,7 +64,51 @@ function Profile() {
 
   useEffect(() => {
     fetchProfileData();
-  }, [fetchProfileData]);
+    if (user?.username) {
+        setNewUsername(user.username);
+    }
+  }, [fetchProfileData, user]);
+
+  const handleSaveUsername = async () => {
+    if (!isAuthenticated || !user) {
+      showMessage('Sessão expirada. Faça login novamente.', 'warning');
+      navigate('/login');
+      return;
+    }
+
+    const trimmedUsername = newUsername.trim();
+    if (trimmedUsername === user.username) {
+      setIsNameEditing(false); // Fecha sem salvar se não houver mudança
+      return;
+    }
+
+    if (trimmedUsername.length < 3) {
+      return showMessage('O nome de usuário deve ter pelo menos 3 caracteres.', 'error');
+    }
+
+    setIsSavingName(true);
+    try {
+      // Chamada da API para atualizar o username (será implementada no serviço)
+      const updatedUserFromApi = await updateUsername({ username: trimmedUsername }); 
+      
+      updateUser(updatedUserFromApi); // Atualiza o contexto (username)
+      showMessage('Nome de usuário alterado com sucesso!', 'success');
+      setIsNameEditing(false); // Fecha o modal
+    } catch (error) {
+      // Assume que o backend retorna {detail: "Username já em uso"} ou similar
+      const errorMessage = error.detail || 'Erro ao salvar o nome de usuário. Tente outro nome.';
+      showMessage(errorMessage, 'error');
+      console.error("Falha ao salvar username:", error);
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  // --- Função para cancelar a edição ---
+  const handleCancelUsernameEdit = () => {
+    setNewUsername(user.username); // Restaura o valor original
+    setIsNameEditing(false); // Fecha o modal
+  };
 
   // Funções para manipular as listas
   const handleDeleteList = async (listId) => {
@@ -216,7 +263,52 @@ function Profile() {
               title="Clique para alterar o ícone"
             />
             {/* Usa user.username ou user.name */}
-            <h1 className="text-4xl font-bold mb-2">{user?.username || user?.name || `Usuário #${user?.id}`}</h1>
+            {isNameEditing ? (
+              // Modo Edição
+              <div className="flex flex-col items-center w-full max-w-sm mb-2">
+                <h2 className="text-xl font-medium mb-2">Trocar nome de usuário</h2>
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className="text-white text-center text-3xl font-bold p-2 mb-2 rounded-lg border-2 border-blue-400 focus:outline-none w-full"
+                  disabled={isSavingName}
+                />
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleSaveUsername}
+                    disabled={
+                      isSavingName ||
+                      newUsername.trim().length < 3 ||
+                      newUsername.trim() === user.username
+                    }
+                    className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingName ? 'Salvando...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={handleCancelUsernameEdit}
+                    disabled={isSavingName}
+                    className="px-4 py-2 bg-slate-400 text-white font-medium rounded-lg hover:bg-slate-500 transition-colors disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Modo Visualização
+              <div className="relative flex justify-center mb-2 w-full">
+                <h1 className="text-4xl font-bold text-center">{user?.username || user?.name || `Usuário #${user?.id}`}</h1>
+                <button
+                  onClick={() => setIsNameEditing(true)}
+                  className="absolute left-1/2 translate-x-[6rem] top-1/2 -translate-y-1/2 hover:text-blue-400 transition-colors"
+                  title="Editar nome de usuário"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+            
             {user?.email && (
               <p className="text-slate-300 flex items-center justify-center space-x-2">
                 <Mail className="w-4 h-4" />
@@ -351,7 +443,7 @@ function Profile() {
           >
             {isDeleting ? (
               <>
-                <LoadingSpinner small white /> {/* Adapte se não tiver um spinner pequeno */}
+                <LoadingSpinner small white />
                 Deletando...
               </>
             ) : (

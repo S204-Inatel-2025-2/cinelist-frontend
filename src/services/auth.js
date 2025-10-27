@@ -66,3 +66,14 @@ export const deleteAccount = async () => {
     throw error.response?.data || new Error('Falha ao deletar conta');
   }
 };
+
+export const updateUsername = async (data) => {
+  try {
+    const response = await api.put('/auth/me/username', data); 
+    return response.data; // Retorna o UserOut atualizado
+  } catch (error) {
+    console.error('Erro ao atualizar username:', error.response?.data || error.message);
+    // Lançamos o erro para que o Profile.jsx possa tratar a mensagem de username duplicado.
+    throw error.response?.data || new Error('Falha ao atualizar username');
+  }
+};
