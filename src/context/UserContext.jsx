@@ -9,6 +9,7 @@ const UserContext = createContext(null);
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // Estado de carregamento para o app
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 3. Efeito de Inicialização (Verifica o token ao carregar o app)
   useEffect(() => {
@@ -42,6 +43,10 @@ export const UserProvider = ({ children }) => {
     setUser(null);
   };
 
+  const setDeleteState = (state) => {
+    setIsDeleting(state);
+  };
+
   // 6. Valor fornecido pelo contexto
   const value = {
     user,
@@ -50,6 +55,8 @@ export const UserProvider = ({ children }) => {
     loading,
     isAuthenticated: !!user, // Um booleano útil
     updateUser: setUser,
+    isDeleting,
+    setDeleteState,
   };
 
   // Não renderiza nada até que a verificação inicial do token termine

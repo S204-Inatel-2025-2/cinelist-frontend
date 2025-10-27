@@ -1,7 +1,7 @@
 // src/pages/Profile.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Star, List, Eye, Trash2 } from 'lucide-react';
+import { User, Mail, Calendar, Star, List, Eye, Trash2, AlertTriangle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getUserRatings } from '../services/media';
 import { getUserLists, deleteList } from '../services/lists';
@@ -11,7 +11,7 @@ import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Message';
 import AvatarModal from '../components/AvatarModal';
 import { getAvatarPath, DEFAULT_AVATAR_ID } from '../config/avatars';
-import { updateUserAvatar } from '../services/auth';
+import { updateUserAvatar, deleteAccount } from '../services/auth';
 
 const removeDuplicatesById = (mediaList) => {
   if (!Array.isArray(mediaList)) return [];
@@ -24,13 +24,12 @@ const removeDuplicatesById = (mediaList) => {
 };
 
 function Profile() {
-  const { user, isAuthenticated, updateUser } = useUser();
+  const { user, isAuthenticated, updateUser, logout, isDeleting, setDeleteState } = useUser();
   const navigate = useNavigate();
   const [ratings, setRatings] = useState([]);
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const { message, type, showMessage } = useMessage();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Busca todos os dados do perfil (avaliações e listas) de uma só vez
@@ -139,6 +138,57 @@ function Profile() {
       console.error("Falha ao salvar avatar:", error);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    if (!isAuthenticated || !user) {
+      showMessage('Sessão expirada. Faça login novamente.', 'warning');
+      navigate('/login');
+      return;
+    }
+    if (isDeleting) return; // Previne cliques múltiplos
+
+    const confirmation = window.confirm(
+      'ATENÇÃO!\n\nTem certeza ABSOLUTA que deseja deletar sua conta?\n\n' +
+      'Esta ação é IRREVERSÍVEL e apagará permanentemente:\n' +
+      '- Seu perfil\n' +
+      '- Todas as suas listas e os itens nelas\n' +
+      '- Todas as suas avaliações e comentários\n\n' +
+      'Não será possível recuperar seus dados.'
+    );
+
+    if (!confirmation) {
+      return; 
+    }
+
+    setDeleteState(true);
+    try {
+      await deleteAccount();
+      showMessage('Sua conta foi deletada com sucesso. Adeus!', 'success');
+
+      setTimeout(() => {
+        logout();
+        // --- USAR CONTEXTO: Setar o estado de volta para FALSE (após o logout) ---
+        setDeleteState(false); 
+        navigate('/login', { replace: true });
+      }, 2500);
+
+    } catch (error) {
+      const errorMessage = error.detail || 'Ocorreu um erro ao tentar deletar sua conta. Tente novamente.';
+      showMessage(errorMessage, 'error');
+      // --- USAR CONTEXTO: Setar o estado de volta para FALSE no erro ---
+      setDeleteState(false); 
+    }
+  };
+
+  if (isDeleting) {
+      return (
+          <div className="min-h-screen bg-slate-800 flex flex-col items-center justify-center text-white">
+              {/* Usando o componente LoadingSpinner existente */}
+              <LoadingSpinner text="Deletando sua conta..." white /> {/* Assumindo que seu spinner tem prop 'white' ou adapta a cor */}
+              <p className="mt-4 text-slate-300">Por favor, aguarde. Você será redirecionado em breve.</p>
+          </div>
+      );
+  }
 
   if (loading || !user) {
       return (
@@ -284,6 +334,33 @@ function Profile() {
                </button>
             </div>
           )}
+        </div>
+        <div className="bg-red-50 border-l-4 border-red-500 rounded-r-lg p-6 mt-12 shadow">
+          <h2 className="text-xl font-bold text-red-800 mb-3 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Zona de Perigo
+          </h2>
+          <p className="text-red-700 mb-4">
+            Deletar sua conta é uma ação permanente e irreversível. Todos os seus dados,
+            incluindo listas e avaliações, serão perdidos para sempre.
+          </p>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={isDeleting}
+            className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isDeleting ? (
+              <>
+                <LoadingSpinner small white /> {/* Adapte se não tiver um spinner pequeno */}
+                Deletando...
+              </>
+            ) : (
+               <>
+                 <Trash2 className="w-5 h-5" />
+                 Deletar Minha Conta Permanentemente
+               </>
+            )}
+          </button>
         </div>
       </div>
       {/* --- Renderizar o Modal --- */}

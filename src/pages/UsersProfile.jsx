@@ -75,9 +75,6 @@ function UsersProfile() {
           <h3 className="text-xl font-bold text-slate-900 mb-2">
             Nenhum outro usuário encontrado
           </h3>
-          <p className="text-slate-600">
-            Cadastre um novo usuário para vê-lo aqui.
-          </p>
         </div>
       );
     }

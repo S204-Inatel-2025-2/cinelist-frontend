@@ -55,3 +55,14 @@ export const updateUserAvatar = async (data) => {
     throw error.response?.data || new Error('Falha ao atualizar avatar');
   }
 };
+
+export const deleteAccount = async () => {
+  try {
+    // Ajuste a URL se o seu endpoint for diferente (ex: '/users/me')
+    const response = await api.delete('/auth/me');
+    return response.data; // Retorna a mensagem de sucesso do backend
+  } catch (error) {
+    console.error('Erro ao deletar conta:', error.response?.data || error.message);
+    throw error.response?.data || new Error('Falha ao deletar conta');
+  }
+};
