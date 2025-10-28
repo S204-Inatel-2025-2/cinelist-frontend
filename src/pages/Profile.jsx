@@ -34,6 +34,7 @@ function Profile() {
   const [isNameEditing, setIsNameEditing] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username || '');
   const [isSavingName, setIsSavingName] = useState(false);
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
 
   // Busca todos os dados do perfil (avaliações e listas) de uma só vez
   const fetchProfileData = useCallback(async () => {
@@ -165,6 +166,7 @@ function Profile() {
   };
 
   const handleCloseModal = () => {
+    if (isSavingAvatar) return;
     setIsModalOpen(false);
   };
 
@@ -174,15 +176,18 @@ function Profile() {
       return;
     }
 
+    setIsSavingAvatar(true); // Trava o modal
     try {
       const updatedUserFromApi = await updateUserAvatar({ avatar: newAvatarId });
       updateUser(updatedUserFromApi);
 
       showMessage('Avatar atualizado com sucesso!', 'success');
-      handleCloseModal(); // Fecha o modal
+      handleCloseModal(); // Fecha o modal (agora já pode fechar)
     } catch (error) {
       showMessage('Erro ao salvar o novo avatar.', 'error');
       console.error("Falha ao salvar avatar:", error);
+    } finally {
+      setIsSavingAvatar(false); // Libera o modal em caso de sucesso ou erro
     }
   };
 
@@ -461,6 +466,7 @@ function Profile() {
         onClose={handleCloseModal}
         onSave={handleSaveAvatar}
         currentAvatarId={user?.avatar || DEFAULT_AVATAR_ID}
+        isSaving={isSavingAvatar} 
       />
     </div>
   );
