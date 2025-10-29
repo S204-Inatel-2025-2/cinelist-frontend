@@ -1,5 +1,5 @@
 // src/pages/Profile.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Calendar, Star, List, Eye, Trash2, AlertTriangle, Pencil } from 'lucide-react';
 import { useUser } from '../context/UserContext';
@@ -53,7 +53,9 @@ function Profile() {
 
       const rawRatings = ratingsResponse.results || [];
       const uniqueRatings = removeDuplicatesById(rawRatings);
+
       setRatings(uniqueRatings);
+      
       setLists(listsResponse || []);
     } catch (error) {
       showMessage('Erro ao carregar dados do perfil.', 'error');
@@ -62,13 +64,39 @@ function Profile() {
       setLoading(false);
     }
   }, [user, isAuthenticated, showMessage, navigate]);
-
+  
   useEffect(() => {
     fetchProfileData();
     if (user?.username) {
         setNewUsername(user.username);
     }
   }, [fetchProfileData, user]);
+
+  const sortedRatings = useMemo(() => {
+    const getTypePriority = (type) => {
+      switch (type) {
+        case 'movie': return 1;
+        case 'serie': return 2;
+        case 'anime': return 3;
+        default: return 4;
+      }
+    };
+
+    return [...ratings].sort((a, b) => {
+      const priorityA = getTypePriority(a.type);
+      const priorityB = getTypePriority(b.type);
+
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      const titleA = (a.title || a.name || '').toString();
+      const titleB = (b.title || b.name || '').toString();
+
+      return titleA.localeCompare(titleB);
+    });
+
+  }, [ratings]);
 
   const handleSaveUsername = async () => {
     if (!isAuthenticated || !user) {
@@ -362,9 +390,8 @@ function Profile() {
             <LoadingSpinner text="Carregando avaliações..." />
           ) : ratings.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-              {ratings.map((item) => (
+              {sortedRatings.map((item) => (
                 <MediaRatedCard
-                  // A chave precisa ser única, usa o ID interno do rating se disponível, senão combina tipo e media_id
                   key={`${item.type}-${item.id}`}
                   media={normalizeRatedData(item)}
                 />
