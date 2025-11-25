@@ -1,61 +1,56 @@
 # CineList
 
-O CineList é uma aplicação web para organizar e avaliar mídias como filmes, séries e animes.
-O usuário pode pesquisar, filtrar, adicionar à sua lista pessoal e registrar avaliações com notas e comentários.
+> **Acesse o projeto online:** [CineList](https://mycinelist.vercel.app/home)
+
+O **CineList** é uma aplicação Full Stack interativa para organizar, avaliar e descobrir mídias (filmes, séries e animes). O projeto consome uma API RESTful dedicada, oferecendo funcionalidades sociais e de gerenciamento de catálogo personalizadas.
 
 ---
 
 ## Funcionalidades
 
-* Autenticação simples (login e cadastro mockados).
-* Pesquisa e filtroa por filmes, séries e animes.
-* Visualização de detalhes das mídias com elenco, diretor/criador e notas.
-* Avaliações personalizadas com comentários e notas de 0 a 10.
-* Lista pessoal de mídias adicionadas pelo usuário.
-* Perfil do usuário exibindo avatar, lista e avaliações.
-* Mensagens de feedback (sucesso, erro e aviso) exibidas de forma elegante.
+### Autenticação e Conta
+* **Login e Cadastro:** Autenticação segura via JWT (JSON Web Tokens).
+* **Gestão de Perfil:** Atualização de avatar, alteração de nome de usuário e exclusão definitiva de conta.
+
+### Catálogo e Descoberta
+* **Busca Unificada:** Pesquisa integrada filtrando por Filmes, Séries ou Animes.
+* **Dados Ricos:** Integração (via Backend) para exibir sinopses, elenco, notas e datas de lançamento.
+* **Carrosséis:** Exibição de mídias populares e tendências.
+
+### Listas e Avaliações
+* **Listas Personalizadas:** Criação de múltiplas listas (ex: "Para Assistir", "Já Vistos"), com adição e remoção dinâmica de itens.
+* **Sistema de Reviews:** Avaliação com nota (0-10) e comentários textuais.
+* **Edição:** Funcionalidade completa para editar ou remover avaliações anteriores.
+
+### Social
+* **Comunidade:** Visualização de perfis de outros usuários.
+* **Listas Públicas:** Acesso às listas e avaliações criadas por outros membros da plataforma.
 
 ---
 
-## Decisões Arquiteturais
+## Arquitetura e Decisões Técnicas
 
-### Modelo Arquitetural
+O frontend foi construído seguindo o modelo **SPA (Single Page Application)**, priorizando a performance e a experiência do usuário.
 
-* O projeto segue a abordagem **SPA**, garantindo navegação rápida sem recarregamento completo da página.
-* As rotas são gerenciadas com **React Router DOM**.
+### Organização do Código
+O projeto segue uma arquitetura modular focada em escalabilidade:
 
-### Gerenciamento de Estado
+* **Services Pattern:** Toda a comunicação com o Backend (API Railway) é centralizada na pasta `/services` utilizando **Axios**. Isso desacopla a lógica de negócios da interface.
+* **Context API:** O estado global (Sessão do Usuário, Tokens) é gerenciado via `UserContext`, persistindo a autenticação mesmo após o recarregamento da página.
+* **Componentização:** Uso extensivo de componentes reutilizáveis (`MediaCard`, `Modal`, `LoadingSpinner`) para manter o código limpo (DRY).
 
-* Implementado com Context API (UserContext), suficiente para a complexidade atual do projeto.
-* Evitamos Redux para manter simplicidade, já que os estados são de escopo limitado (usuário logado e listas).
-
-### Mock de Dados
-
-* Utilização de arrays locais simulando mídias e usuários.
-* Essa decisão foi tomada para validar as features antes de integrar com uma API real (ex.: TMDB, AniList).
-
-### Estilização
-
-* Escolha do Tailwind CSS pela rapidez no protótipo e flexibilidade.
-* Padronização de feedbacks visuais com toast notifications. (futuramente)
-
-### Organização de Pastas
-
-* Separação em components, `pages`, `layout` e `context`, visando modularidade e reutilização.
-* Uso de layouts distintos para páginas públicas (ex.: Login, Registro) e privadas (ex.: Perfil, Listas).
 
 ### Estrutura de Pastas
 
 ```
 src/
-├── App.jsx               # Configuração das rotas
-├── main.jsx              # Ponto de entrada da aplicação
-├── assets/               # Possíveis assets, logo, ui de forma geral, etc.
-├── components/           # Navbar, Footer, etc.
-├── context/              # UserContext para estado global
-├── layout/               # Layouts público e privado
-├── pages/                # Páginas (Home, Login, Register, MediaDetails, Profile)
-└── index.css             # Estilos globais
+├── components/   # Componentes visuais reutilizáveis (UI)
+├── config/       # Constantes e configurações (ex: avatares)
+├── context/      # Gerenciamento de estado global (Auth)
+├── hooks/        # Custom Hooks (ex: useMessage para Toasts)
+├── pages/        # Telas e rotas da aplicação
+├── services/     # Integração com a API REST
+└── App.jsx       # Definição de Rotas Públicas e Privadas
 ```
 
 ---
@@ -66,7 +61,6 @@ src/
 * Estilização: [Tailwind CSS](https://tailwindcss.com)
 * Roteamento: [React Router DOM](https://reactrouter.com/)
 * Gerenciamento de estado local: Context API (UserContext)
-* Mock de dados: Arrays locais simulando mídias e usuários
 
 ---
 
@@ -96,15 +90,6 @@ npm install
 npm run dev
 ```
 > Por padrão será iniciado em http://localhost:5173
-
----
-
-## Próximos Passos
-
-* Integração com o **backend**.
-* Implementação de **sistema real de autenticação**.
-* Melhorias na UI/UX.
-* Deploy
 
 ---
 
